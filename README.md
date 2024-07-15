@@ -63,14 +63,3 @@ The source code is organized as follows:
 ### Trojan model cleanse
 
 ```python -u main_backdoor.py --save_dir ${save_dir} --mask ${mask_path} --unlearn FT --num_indexes_to_replace 4500```
-
-## BibTeX
-If you find this repository or the ideas presented in our paper useful, please consider citing.
-```
-@inproceedings{jia2023model,
-  title={Model Sparsity Can Simplify Machine Unlearning},
-  author={Jia, Jinghan and Liu, Jiancheng and Ram, Parikshit and Yao, Yuguang and Liu, Gaowen and Liu, Yang and Sharma, Pranay and Liu, Sijia},
-  booktitle={Thirty-seventh Conference on Neural Information Processing Systems},
-  year={2023}
-}
-```
