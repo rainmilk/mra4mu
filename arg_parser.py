@@ -63,6 +63,7 @@ def parse_args():
     parser.add_argument("--resume_lipnet", action="store_true", default=False, help="resume lip_net path")
     parser.add_argument("--test_data_dir", type=str, default='', help="lipnet test data path")
     parser.add_argument("--save_forget_dir", type=str, default='', help="save lipnet forget predict path")
+    parser.add_argument("--finetune_unlearn", action="store_true", default=False, help="finetune unlearn model")
 
     parser.add_argument("--checkpoint", type=str, default=None, help="checkpoint file")
     parser.add_argument(

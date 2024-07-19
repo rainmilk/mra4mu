@@ -92,10 +92,17 @@ def test(test_loader, model):
 
 
 class CustomDataset(Dataset):
-    def __init__(self, data, label):
+    def __init__(self, data, label, dataset_name):
         data = data.astype(np.float32)
-        data = np.transpose(data, [0, 3, 1, 2])
-        self.data = data / 255
+        if dataset_name in ['cifar10', 'cifar100']:
+            data = np.transpose(data, [0, 3, 1, 2])
+            self.data = data / 255
+        elif dataset_name == 'fashionMNIST':
+            # data = np.repeat(data[:, np.newaxis, ...], 3, axis=1)
+            data = data[:, np.newaxis, ...]
+            self.data = data / 255
+        elif dataset_name == 'TinyImagenet':
+            self.data = data
         self.label = label
 
     def __len__(self):
@@ -105,7 +112,7 @@ class CustomDataset(Dataset):
         return self.data[index], self.label[index]
 
 
-def get_loader(loader_name, data_dir, batch_size, inter_index=None, shuffle=False):
+def get_loader(loader_name, data_dir, batch_size, dataset_name, inter_index=None, shuffle=False):
     dataset = None
     if loader_name == "test":
         test_data_path = os.path.join(data_dir, 'test_data.npy')
@@ -113,7 +120,7 @@ def get_loader(loader_name, data_dir, batch_size, inter_index=None, shuffle=Fals
         test_data = np.load(test_data_path)
         test_label = np.load(test_label_path)
 
-        dataset = CustomDataset(test_data, test_label)
+        dataset = CustomDataset(test_data, test_label, dataset_name)
 
     elif loader_name == "forget":
         forget_data_path = os.path.join(data_dir, 'forget_data.npy')
@@ -121,7 +128,7 @@ def get_loader(loader_name, data_dir, batch_size, inter_index=None, shuffle=Fals
         forget_data = np.load(forget_data_path)
         forget_label = np.load(forget_label_path)
 
-        dataset = CustomDataset(forget_data, forget_label)
+        dataset = CustomDataset(forget_data, forget_label, dataset_name)
     elif loader_name == "forget_inter":
         forget_data_path = os.path.join(data_dir, 'forget_data.npy')
         forget_label_path = os.path.join(data_dir, 'forget_label.npy')
@@ -131,7 +138,7 @@ def get_loader(loader_name, data_dir, batch_size, inter_index=None, shuffle=Fals
         forget_inter_data = forget_data[inter_index]
         forget_inter_label = forget_label[inter_index]
 
-        dataset = CustomDataset(forget_inter_data, forget_inter_label)
+        dataset = CustomDataset(forget_inter_data, forget_inter_label, dataset_name)
 
     data_loader = DataLoader(
         dataset,
@@ -146,12 +153,12 @@ def main():
     shuffle_flg = False
     if not args.resume_lipnet:
         shuffle_flg = True
-    test_loader = get_loader('test', args.test_data_dir, args.batch_size, shuffle_flg)
-    forget_loader = get_loader('forget', args.test_data_dir, args.batch_size, False)
+    test_loader = get_loader('test', args.test_data_dir, args.batch_size, args.dataset, shuffle_flg)
+    forget_loader = get_loader('forget', args.test_data_dir, args.batch_size, args.dataset, False)
 
     resnet = models.resnet18(pretrained=False, num_classes=512)
     resnet = nn.Sequential(*list(resnet.children())[:-1])
-    model = SimpleLipNet(resnet, 512, 10, [512])
+    model = SimpleLipNet(resnet, 512, args.num_classes, [512])
     model.cuda()
 
     os.makedirs(args.lip_save_dir, exist_ok=True)

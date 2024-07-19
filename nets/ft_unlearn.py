@@ -10,9 +10,10 @@ from torch.utils.data import Dataset
 import utils
 import arg_parser
 from train import get_loader
+from models.VGG_LTH import vgg16_bn_lth
 
 
-def train(train_loader, model, args):
+def train(train_loader, model, model_path, args):
     loss_fn = nn.CrossEntropyLoss()
     top1 = utils.AverageMeter()
     optimizer = torch.optim.SGD(
@@ -67,9 +68,8 @@ def train(train_loader, model, args):
 
         # print("train_accuracy {top1.avg:.3f}".format(top1=top1))
 
-    # state = {"state_dict": model.state_dict()}
-    # save_path = os.path.join(args.lip_save_dir, 'checkpoint.pth.tar')
-    # torch.save(state, save_path)
+    state = {"state_dict": model.state_dict()}
+    torch.save(state, model_path)
 
     return top1.avg
 
@@ -109,19 +109,30 @@ def print_acc(test_preds, forget_preds):
     test_acc_unlearn = np.mean(test_label == test_preds)
 
     forget_label = np.load(os.path.join(args.test_data_dir, 'forget_label.npy'))
-    forget_acc_unlearn = np.sum(forget_preds == forget_label) / len(forget_label)
+    forget_acc_unlearn = np.mean(forget_preds == forget_label)
 
     print('test_acc: %.2f, forget_acc: %.2f' % (test_acc_unlearn * 100, forget_acc_unlearn * 100))
 
+    label_list = sorted(list(set(forget_label)))
+    for label in label_list:
+        cls_index = forget_label == label
+        forget_acc_unlearn_cls = np.mean(forget_preds[cls_index] == forget_label[cls_index])
+        print('label: %s, forget_acc: %.2f' % (label, forget_acc_unlearn_cls*100))
+
+    return forget_acc_unlearn
+
 
 def main():
-    test_loader = get_loader('test', args.test_data_dir, args.batch_size)
-    forget_loader = get_loader('forget', args.test_data_dir, args.batch_size)
-
-    # forget_loader_all = copy.deepcopy(forget_loader)
+    test_loader = get_loader('test', args.test_data_dir, args.batch_size, args.dataset)
+    forget_loader = get_loader('forget', args.test_data_dir, args.batch_size, args.dataset)
 
     # load unlearn model
-    unlearn_model = models.resnet18(pretrained=False, num_classes=10)
+    if args.arch == 'resnet18':
+        unlearn_model = models.resnet18(pretrained=False, num_classes=args.num_classes)
+        if args.dataset == 'fashionMNIST':
+            unlearn_model.conv1 = nn.Conv2d(1, 64, 7, 2, 3, bias=False)
+    elif args.arch == 'vgg16_bn_lth':
+        unlearn_model = vgg16_bn_lth(num_classes=args.num_classes)
     model_path = os.path.join(args.save_dir, args.unlearn + 'checkpoint.pth.tar')
     checkpoint = torch.load(model_path)
     unlearn_model.load_state_dict(checkpoint["state_dict"], strict=False)
@@ -130,26 +141,42 @@ def main():
     # load lip foreget predicts
     lip_forget_pred = np.load(os.path.join(args.save_forget_dir, 'forget_lip_pred.npy'))
 
+    print('Before fine-tune:')
+    print('unlearn model: %s, dataset: %s' % (args.unlearn, args.dataset))
+
     test_preds = test(test_loader, unlearn_model)
     forget_preds = test(forget_loader, unlearn_model)
-    print_acc(test_preds, forget_preds)
+    forget_acc_before = print_acc(test_preds, forget_preds)
 
-    for i in range(10):
-        print('finetune iterate : %d' % (i+1))
+    if args.finetune_unlearn:
+        print('Finetuning...')
+        top_forget_acc = forget_acc_before
+        early_stop_num = 0
 
-        # forget lip predicts & unlearn predict
-        rnd_idx = np.random.choice(len(forget_loader.dataset.label), 100)
-        inter_index = lip_forget_pred == forget_preds
-        if sum(inter_index) < 100:
-            inter_index[rnd_idx] = True
-        forget_inter_loader = get_loader('forget_inter', args.test_data_dir, args.batch_size, inter_index, True)
+        for i in range(100):
+            print('-----finetune iterate : %d -----' % (i+1))
 
-        train(forget_inter_loader, unlearn_model, args)
+            # forget lip predicts & unlearn predict
+            rnd_idx = np.random.choice(len(forget_loader.dataset.label), 100)
+            inter_index = lip_forget_pred == forget_preds
+            if sum(inter_index) < 100:
+                inter_index[rnd_idx] = True
+            forget_inter_loader = get_loader('forget_inter', args.test_data_dir, args.batch_size, args.dataset, inter_index, True)
 
-        print('-----------------after train-----------------------')
-        test_preds = test(test_loader, unlearn_model)
-        forget_preds = test(forget_loader, unlearn_model)
-        print_acc(test_preds, forget_preds)
+            train(forget_inter_loader, unlearn_model, model_path, args)
+
+            # print('-----------------after train-----------------------')
+            test_preds = test(test_loader, unlearn_model)
+            forget_preds = test(forget_loader, unlearn_model)
+            forget_acc = print_acc(test_preds, forget_preds)
+            if top_forget_acc >= forget_acc:
+                early_stop_num += 1
+            else:
+                top_forget_acc = forget_acc
+                early_stop_num = 0
+
+            if early_stop_num == 7:
+                break
 
 
 if __name__ == "__main__":
