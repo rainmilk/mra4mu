@@ -56,6 +56,14 @@ def parse_args():
     parser.add_argument("--resume", action="store_true", help="resume from checkpoint")
     # todo
     parser.add_argument("--load_ff", action="store_true", help="load finetune model and unlearn train")
+    parser.add_argument("--shuffle", action="store_false", default=True, help="shuffle dataset")
+    parser.add_argument("--save_data", action="store_true", default=False, help="save dataset")
+    parser.add_argument("--save_data_path", type=str, default='', help="save dataset path")
+    parser.add_argument("--lip_save_dir", type=str, default='', help="save lip_net path")
+    parser.add_argument("--resume_lipnet", action="store_true", default=False, help="resume lip_net path")
+    parser.add_argument("--test_data_dir", type=str, default='', help="lipnet test data path")
+    parser.add_argument("--save_forget_dir", type=str, default='', help="save lipnet forget predict path")
+
     parser.add_argument("--checkpoint", type=str, default=None, help="checkpoint file")
     parser.add_argument(
         "--save_dir",

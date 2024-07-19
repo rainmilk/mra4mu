@@ -6,6 +6,7 @@ import torch
 import torch.nn as nn
 import torch.optim
 import torch.utils.data
+import numpy as np
 
 import arg_parser
 import evaluation
@@ -13,10 +14,6 @@ import pruner
 import unlearn
 import utils
 from trainer import validate
-
-
-
-
 
 
 def main():
@@ -33,6 +30,10 @@ def main():
     if args.seed:
         utils.setup_seed(args.seed)
     seed = args.seed
+
+    # todo add shuffle_flg
+    shuffle_flg = args.shuffle
+
     # prepare dataset
     (
         model,
@@ -66,7 +67,7 @@ def main():
             forget_dataset.targets = -forget_dataset.targets[marked] - 1
         except:
             forget_dataset.labels = -forget_dataset.labels[marked] - 1
-        forget_loader = replace_loader_dataset(forget_dataset, seed=seed, shuffle=True)
+        forget_loader = replace_loader_dataset(forget_dataset, seed=seed, shuffle=shuffle_flg)
         print('len(forget_dataset)', len(forget_dataset))
         retain_dataset = copy.deepcopy(marked_loader.dataset)
         try:
@@ -78,7 +79,8 @@ def main():
             retain_dataset.targets = retain_dataset.targets[marked]
         except:
             retain_dataset.labels = retain_dataset.labels[marked]
-        retain_loader = replace_loader_dataset(retain_dataset, seed=seed, shuffle=True)
+
+        retain_loader = replace_loader_dataset(retain_dataset, seed=seed, shuffle=shuffle_flg)
         print('len(retain_dataset)', len(retain_dataset))
         assert len(forget_dataset) + len(retain_dataset) == len(
             train_loader_full.dataset
@@ -89,7 +91,7 @@ def main():
             forget_dataset.data = forget_dataset.data[marked]
             forget_dataset.targets = -forget_dataset.targets[marked] - 1
             forget_loader = replace_loader_dataset(
-                forget_dataset, seed=seed, shuffle=True
+                forget_dataset, seed=seed, shuffle=shuffle_flg
             )
             print('len(forget_dataset)', len(forget_dataset))
             retain_dataset = copy.deepcopy(marked_loader.dataset)
@@ -97,7 +99,7 @@ def main():
             retain_dataset.data = retain_dataset.data[marked]
             retain_dataset.targets = retain_dataset.targets[marked]
             retain_loader = replace_loader_dataset(
-                retain_dataset, seed=seed, shuffle=True
+                retain_dataset, seed=seed, shuffle=shuffle_flg
             )
             print('len(retain_dataset)', len(retain_dataset))
             assert len(forget_dataset) + len(retain_dataset) == len(
@@ -108,7 +110,7 @@ def main():
             forget_dataset.imgs = forget_dataset.imgs[marked]
             forget_dataset.targets = -forget_dataset.targets[marked] - 1
             forget_loader = replace_loader_dataset(
-                forget_dataset, seed=seed, shuffle=True
+                forget_dataset, seed=seed, shuffle=shuffle_flg
             )
             print('len(forget_dataset)', len(forget_dataset))
             retain_dataset = copy.deepcopy(marked_loader.dataset)
@@ -116,12 +118,32 @@ def main():
             retain_dataset.imgs = retain_dataset.imgs[marked]
             retain_dataset.targets = retain_dataset.targets[marked]
             retain_loader = replace_loader_dataset(
-                retain_dataset, seed=seed, shuffle=True
+                retain_dataset, seed=seed, shuffle=shuffle_flg
             )
             print('len(retain_dataset)', len(retain_dataset))
             assert len(forget_dataset) + len(retain_dataset) == len(
                 train_loader_full.dataset
             )
+
+    # todo add save dataset
+    if args.save_data:
+        if not args.shuffle:
+            path = args.save_data_path
+            os.makedirs(path, exist_ok=True)
+            if args.dataset == 'TinyImagenet':
+                test_data = test_loader.dataset.imgs
+                forget_data = forget_dataset.imgs
+            else:
+                test_data = test_loader.dataset.data
+                forget_data = forget_dataset.data
+            np.save(os.path.join(path, 'test_data.npy'), test_data)
+            np.save(os.path.join(path, 'test_label.npy'), test_loader.dataset.targets)
+            np.save(os.path.join(path, 'forget_data.npy'), forget_data)
+            np.save(os.path.join(path, 'forget_label.npy'), forget_dataset.targets)
+
+            print('save test data label and forget data label done!')
+        else:
+            print('set --shuffle false to save data!!!')
 
     unlearn_data_loaders = OrderedDict(
         retain=retain_loader, forget=forget_loader, val=val_loader, test=test_loader
@@ -134,10 +156,18 @@ def main():
     def get_accuracy():
         accuracy = {}
         for name, loader in unlearn_data_loaders.items():
+            # loader.shuffle = False
             utils.dataset_convert_to_test(loader.dataset, args)
-            val_acc = validate(loader, model, criterion, args)
+            val_acc, predicts = validate(loader, model, criterion, args)
             accuracy[name] = val_acc
             print(f"{name} acc: {val_acc}")
+
+            if name == 'test':
+                save_path = args.save_data_path
+                np.save(os.path.join(save_path, 'test_predicts.npy'), predicts)
+            if name == 'forget':
+                save_path = args.save_data_path
+                np.save(os.path.join(save_path, 'forget_predicts.npy'), predicts)
 
         class_replace_list = args.class_to_replace.split(',')
         f_dataset = copy.deepcopy(forget_dataset)
@@ -156,7 +186,7 @@ def main():
                 shuffle=False,
             )
             utils.dataset_convert_to_test(loader.dataset, args)
-            val_acc = validate(loader, model, criterion, args)
+            val_acc, predicts = validate(loader, model, criterion, args)
             accuracy['forget ' + class_replace_str] = val_acc
             print(f"forget label {class_replace_str} acc: {val_acc}")
         return accuracy

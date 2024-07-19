@@ -128,7 +128,7 @@ def setup_model_dataset(args):
             indexes_to_replace=args.indexes_to_replace,
             seed=args.seed,
             only_mark=True,
-            shuffle=True,
+            shuffle=args.shuffle,  # todo
             no_aug=args.no_aug,
         )
 
@@ -168,7 +168,7 @@ def setup_model_dataset(args):
             indexes_to_replace=args.indexes_to_replace,
             seed=args.seed,
             only_mark=True,
-            shuffle=True,
+            shuffle=args.shuffle,
             no_aug=args.no_aug,
         )
 
@@ -211,7 +211,7 @@ def setup_model_dataset(args):
             indexes_to_replace=args.indexes_to_replace,
             seed=args.seed,
             only_mark=True,
-            shuffle=True,
+            shuffle=args.shuffle,
         )
         if args.imagenet_arch:
             model = model_dict[args.arch](num_classes=classes, imagenet=True)
@@ -238,7 +238,7 @@ def setup_model_dataset(args):
             indexes_to_replace=args.indexes_to_replace,
             seed=args.seed,
             only_mark=True,
-            shuffle=True,
+            shuffle=args.shuffle,
             no_aug=args.no_aug,
         )
         if args.imagenet_arch:
@@ -266,7 +266,7 @@ def setup_model_dataset(args):
             indexes_to_replace=args.indexes_to_replace,
             seed=args.seed,
             only_mark=True,
-            shuffle=True,
+            shuffle=args.shuffle,
         )
         if args.imagenet_arch:
             model = model_dict[args.arch](num_classes=classes, imagenet=True)
@@ -388,6 +388,24 @@ def accuracy(output, target, topk=(1,)):
         correct_k = correct[:k].view(-1).float().sum(0)
         res.append(correct_k.mul_(100.0 / batch_size))
     return res
+
+
+# todo add predict
+def accuracy_predicts(output, target, topk=(1,)):
+    """Computes the precision@k for the specified values of k"""
+    maxk = max(topk)
+    batch_size = target.size(0)
+
+    _, pred = output.topk(maxk, 1, True, True)
+    predicts = pred.cpu().data.numpy().squeeze()
+    pred = pred.t()
+    correct = pred.eq(target.view(1, -1).expand_as(pred))
+
+    res = []
+    for k in topk:
+        correct_k = correct[:k].view(-1).float().sum(0)
+        res.append(correct_k.mul_(100.0 / batch_size))
+    return res, predicts
 
 
 def run_commands(gpus, commands, call=False, dir="commands", shuffle=True, delay=0.5):

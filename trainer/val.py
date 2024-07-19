@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 
 import utils
 from imagenet import get_x_y_from_data_dict
@@ -13,6 +14,8 @@ def validate(val_loader, model, criterion, args):
 
     # switch to evaluate mode
     model.eval()
+
+    predicts_all = np.array([])
     if args.imagenet_arch:
         device = (
             torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
@@ -55,9 +58,13 @@ def validate(val_loader, model, criterion, args):
             loss = loss.float()
 
             # measure accuracy and record loss
-            prec1 = utils.accuracy(output.data, target)[0]
+            # todo add predicts
+            prec1, predicts = utils.accuracy_predicts(output.data, target)
+            prec1 = prec1[0]
             losses.update(loss.item(), image.size(0))
             top1.update(prec1.item(), image.size(0))
+
+            predicts_all = np.append(predicts_all, predicts)
 
             # if i % args.print_freq == 0:
             #     print(
@@ -70,4 +77,4 @@ def validate(val_loader, model, criterion, args):
 
         # print("valid_accuracy {top1.avg:.3f}".format(top1=top1))
 
-    return top1.avg
+    return top1.avg, predicts_all
