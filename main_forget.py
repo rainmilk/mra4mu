@@ -17,7 +17,8 @@ from trainer import validate
 
 
 def main():
-    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+    # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+    os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4,5,6,7"
     args = arg_parser.parse_args()
 
     if torch.cuda.is_available():
@@ -67,8 +68,10 @@ def main():
             forget_dataset.targets = -forget_dataset.targets[marked] - 1
         except:
             forget_dataset.labels = -forget_dataset.labels[marked] - 1
-        forget_loader = replace_loader_dataset(forget_dataset, seed=seed, shuffle=shuffle_flg)
-        print('len(forget_dataset)', len(forget_dataset))
+        forget_loader = replace_loader_dataset(
+            forget_dataset, seed=seed, shuffle=shuffle_flg
+        )
+        print("len(forget_dataset)", len(forget_dataset))
         retain_dataset = copy.deepcopy(marked_loader.dataset)
         try:
             marked = retain_dataset.targets >= 0
@@ -80,8 +83,10 @@ def main():
         except:
             retain_dataset.labels = retain_dataset.labels[marked]
 
-        retain_loader = replace_loader_dataset(retain_dataset, seed=seed, shuffle=shuffle_flg)
-        print('len(retain_dataset)', len(retain_dataset))
+        retain_loader = replace_loader_dataset(
+            retain_dataset, seed=seed, shuffle=shuffle_flg
+        )
+        print("len(retain_dataset)", len(retain_dataset))
         assert len(forget_dataset) + len(retain_dataset) == len(
             train_loader_full.dataset
         )
@@ -93,7 +98,7 @@ def main():
             forget_loader = replace_loader_dataset(
                 forget_dataset, seed=seed, shuffle=shuffle_flg
             )
-            print('len(forget_dataset)', len(forget_dataset))
+            print("len(forget_dataset)", len(forget_dataset))
             retain_dataset = copy.deepcopy(marked_loader.dataset)
             marked = retain_dataset.targets >= 0
             retain_dataset.data = retain_dataset.data[marked]
@@ -101,7 +106,7 @@ def main():
             retain_loader = replace_loader_dataset(
                 retain_dataset, seed=seed, shuffle=shuffle_flg
             )
-            print('len(retain_dataset)', len(retain_dataset))
+            print("len(retain_dataset)", len(retain_dataset))
             assert len(forget_dataset) + len(retain_dataset) == len(
                 train_loader_full.dataset
             )
@@ -112,7 +117,7 @@ def main():
             forget_loader = replace_loader_dataset(
                 forget_dataset, seed=seed, shuffle=shuffle_flg
             )
-            print('len(forget_dataset)', len(forget_dataset))
+            print("len(forget_dataset)", len(forget_dataset))
             retain_dataset = copy.deepcopy(marked_loader.dataset)
             marked = retain_dataset.targets >= 0
             retain_dataset.imgs = retain_dataset.imgs[marked]
@@ -120,7 +125,7 @@ def main():
             retain_loader = replace_loader_dataset(
                 retain_dataset, seed=seed, shuffle=shuffle_flg
             )
-            print('len(retain_dataset)', len(retain_dataset))
+            print("len(retain_dataset)", len(retain_dataset))
             assert len(forget_dataset) + len(retain_dataset) == len(
                 train_loader_full.dataset
             )
@@ -130,20 +135,20 @@ def main():
         if not args.shuffle:
             path = args.save_data_path
             os.makedirs(path, exist_ok=True)
-            if args.dataset == 'TinyImagenet':
+            if args.dataset == "TinyImagenet":
                 test_data = test_loader.dataset.imgs
                 forget_data = forget_dataset.imgs
             else:
                 test_data = test_loader.dataset.data
                 forget_data = forget_dataset.data
-            np.save(os.path.join(path, 'test_data.npy'), test_data)
-            np.save(os.path.join(path, 'test_label.npy'), test_loader.dataset.targets)
-            np.save(os.path.join(path, 'forget_data.npy'), forget_data)
-            np.save(os.path.join(path, 'forget_label.npy'), forget_dataset.targets)
+            np.save(os.path.join(path, "test_data.npy"), test_data)
+            np.save(os.path.join(path, "test_label.npy"), test_loader.dataset.targets)
+            np.save(os.path.join(path, "forget_data.npy"), forget_data)
+            np.save(os.path.join(path, "forget_label.npy"), forget_dataset.targets)
 
-            print('save test data label and forget data label done!')
+            print("save test data label and forget data label done!")
         else:
-            print('set --shuffle false to save data!!!')
+            print("set --shuffle false to save data!!!")
 
     unlearn_data_loaders = OrderedDict(
         retain=retain_loader, forget=forget_loader, val=val_loader, test=test_loader
@@ -162,19 +167,19 @@ def main():
             accuracy[name] = val_acc
             print(f"{name} acc: {val_acc}")
 
-            if name == 'test':
+            if name == "test":
                 save_path = args.save_data_path
-                np.save(os.path.join(save_path, 'test_predicts.npy'), predicts)
-            if name == 'forget':
+                np.save(os.path.join(save_path, "test_predicts.npy"), predicts)
+            if name == "forget":
                 save_path = args.save_data_path
-                np.save(os.path.join(save_path, 'forget_predicts.npy'), predicts)
+                np.save(os.path.join(save_path, "forget_predicts.npy"), predicts)
 
-        class_replace_list = args.class_to_replace.split(',')
+        class_replace_list = args.class_to_replace.split(",")
         f_dataset = copy.deepcopy(forget_dataset)
         for class_replace_str in class_replace_list:
             class_replace = int(class_replace_str)
             c_idx = forget_dataset.targets == class_replace
-            if args.dataset == 'TinyImagenet':
+            if args.dataset == "TinyImagenet":
                 f_dataset.imgs = forget_dataset.imgs[c_idx]
             else:
                 f_dataset.data = forget_dataset.data[c_idx]
@@ -187,7 +192,7 @@ def main():
             )
             utils.dataset_convert_to_test(loader.dataset, args)
             val_acc, predicts = validate(loader, model, criterion, args)
-            accuracy['forget ' + class_replace_str] = val_acc
+            accuracy["forget " + class_replace_str] = val_acc
             print(f"forget label {class_replace_str} acc: {val_acc}")
         return accuracy
 
