@@ -1,5 +1,6 @@
 import copy
 import os
+import random
 from collections import OrderedDict
 
 import torch
@@ -167,12 +168,13 @@ def main():
             accuracy[name] = val_acc
             print(f"{name} acc: {val_acc}")
 
-            if name == "test":
-                save_path = args.save_data_path
-                np.save(os.path.join(save_path, "test_predicts.npy"), predicts)
-            if name == "forget":
-                save_path = args.save_data_path
-                np.save(os.path.join(save_path, "forget_predicts.npy"), predicts)
+            if args.save_data:
+                if name == 'test':
+                    save_path = args.save_data_path
+                    np.save(os.path.join(save_path, 'test_predicts.npy'), predicts)
+                if name == 'forget':
+                    save_path = args.save_data_path
+                    np.save(os.path.join(save_path, 'forget_predicts.npy'), predicts)
 
         class_replace_list = args.class_to_replace.split(",")
         f_dataset = copy.deepcopy(forget_dataset)
@@ -248,7 +250,9 @@ def main():
         in distribution: retain
         out of distribution: test
         target: (, forget)"""
-    if "SVC_MIA_forget_efficacy" not in evaluation_result:
+    # todo temp
+    # if "SVC_MIA_forget_efficacy" not in evaluation_result:
+    if True:
         test_len = len(test_loader.dataset)
         forget_len = len(forget_dataset)
         retain_len = len(retain_dataset)
@@ -256,17 +260,24 @@ def main():
         utils.dataset_convert_to_test(retain_dataset, args)
         utils.dataset_convert_to_test(forget_loader, args)
         utils.dataset_convert_to_test(test_loader, args)
-
-        shadow_train = torch.utils.data.Subset(retain_dataset, list(range(test_len)))
+        shadow_test_len = test_len // 8
+        shadow_test = torch.utils.data.Subset(test_loader.dataset, list(range(shadow_test_len)))
+        random_retain = np.random.choice(retain_len, shadow_test_len // 2)
+        random_forget = np.random.choice(np.arange(retain_len, retain_len+forget_len), shadow_test_len // 2)
+        random_idx = np.concatenate([random_retain, random_forget], axis=0)
+        shadow_train = torch.utils.data.Subset(retain_dataset + forget_dataset, random_idx)
         shadow_train_loader = torch.utils.data.DataLoader(
             shadow_train, batch_size=args.batch_size, shuffle=False
+        )
+        shadow_test_loader = torch.utils.data.DataLoader(
+            shadow_test, batch_size=args.batch_size, shuffle=False
         )
 
         evaluation_result["SVC_MIA_forget_efficacy"] = evaluation.SVC_MIA(
             shadow_train=shadow_train_loader,
-            shadow_test=test_loader,
-            target_train=None,
-            target_test=forget_loader,
+            shadow_test=shadow_test_loader,
+            target_train=forget_loader,
+            target_test=None,
             model=model,
         )
         unlearn.save_unlearn_checkpoint(model, evaluation_result, args)
@@ -275,48 +286,48 @@ def main():
         in distribution: retain
         out of distribution: test
         target: (retain, test)"""
-    if "SVC_MIA_training_privacy" not in evaluation_result:
-        test_len = len(test_loader.dataset)
-        retain_len = len(retain_dataset)
-        num = test_len // 2
+    # if "SVC_MIA_training_privacy" not in evaluation_result:
+    #     test_len = len(test_loader.dataset)
+    #     retain_len = len(retain_dataset)
+    #     num = test_len // 2
+    #
+    #     utils.dataset_convert_to_test(retain_dataset, args)
+    #     utils.dataset_convert_to_test(forget_loader, args)
+    #     utils.dataset_convert_to_test(test_loader, args)
+    #
+    #     shadow_train = torch.utils.data.Subset(retain_dataset, list(range(num)))
+    #     target_train = torch.utils.data.Subset(
+    #         retain_dataset, list(range(num, retain_len))
+    #     )
+    #     shadow_test = torch.utils.data.Subset(test_loader.dataset, list(range(num)))
+    #     target_test = torch.utils.data.Subset(
+    #         test_loader.dataset, list(range(num, test_len))
+    #     )
+    #
+    #     shadow_train_loader = torch.utils.data.DataLoader(
+    #         shadow_train, batch_size=args.batch_size, shuffle=False
+    #     )
+    #     shadow_test_loader = torch.utils.data.DataLoader(
+    #         shadow_test, batch_size=args.batch_size, shuffle=False
+    #     )
+    #
+    #     target_train_loader = torch.utils.data.DataLoader(
+    #         target_train, batch_size=args.batch_size, shuffle=False
+    #     )
+    #     target_test_loader = torch.utils.data.DataLoader(
+    #         target_test, batch_size=args.batch_size, shuffle=False
+    #     )
+    #
+    #     evaluation_result["SVC_MIA_training_privacy"] = evaluation.SVC_MIA(
+    #         shadow_train=shadow_train_loader,
+    #         shadow_test=shadow_test_loader,
+    #         target_train=target_train_loader,
+    #         target_test=target_test_loader,
+    #         model=model,
+    #     )
+    #     unlearn.save_unlearn_checkpoint(model, evaluation_result, args)
 
-        utils.dataset_convert_to_test(retain_dataset, args)
-        utils.dataset_convert_to_test(forget_loader, args)
-        utils.dataset_convert_to_test(test_loader, args)
-
-        shadow_train = torch.utils.data.Subset(retain_dataset, list(range(num)))
-        target_train = torch.utils.data.Subset(
-            retain_dataset, list(range(num, retain_len))
-        )
-        shadow_test = torch.utils.data.Subset(test_loader.dataset, list(range(num)))
-        target_test = torch.utils.data.Subset(
-            test_loader.dataset, list(range(num, test_len))
-        )
-
-        shadow_train_loader = torch.utils.data.DataLoader(
-            shadow_train, batch_size=args.batch_size, shuffle=False
-        )
-        shadow_test_loader = torch.utils.data.DataLoader(
-            shadow_test, batch_size=args.batch_size, shuffle=False
-        )
-
-        target_train_loader = torch.utils.data.DataLoader(
-            target_train, batch_size=args.batch_size, shuffle=False
-        )
-        target_test_loader = torch.utils.data.DataLoader(
-            target_test, batch_size=args.batch_size, shuffle=False
-        )
-
-        evaluation_result["SVC_MIA_training_privacy"] = evaluation.SVC_MIA(
-            shadow_train=shadow_train_loader,
-            shadow_test=shadow_test_loader,
-            target_train=target_train_loader,
-            target_test=target_test_loader,
-            model=model,
-        )
-        unlearn.save_unlearn_checkpoint(model, evaluation_result, args)
-
-    unlearn.save_unlearn_checkpoint(model, evaluation_result, args)
+    # unlearn.save_unlearn_checkpoint(model, evaluation_result, args)
 
 
 if __name__ == "__main__":
