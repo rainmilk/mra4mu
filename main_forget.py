@@ -18,7 +18,7 @@ from trainer import validate
 
 def main():
     # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-    os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4,5,6,7"
+    # os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4,5,6,7"
     args = arg_parser.parse_args()
 
     if torch.cuda.is_available():

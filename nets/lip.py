@@ -5,6 +5,9 @@ from torchvision import models
 
 
 class SimpleLipNet(nn.Module):
+    '''
+    Implementation of Lipschitz regularized network
+    '''
     def __init__(self, backbone, input_sz, output_sz, hidden_layers=[]):
         super(SimpleLipNet, self).__init__()
 
