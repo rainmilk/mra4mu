@@ -12,3 +12,4 @@ commands
 *.jpg
 *.pdf
 *.info
+*.tmp

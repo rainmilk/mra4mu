@@ -7,6 +7,10 @@ import time
 import numpy as np
 from torch.utils.data import DataLoader, Dataset
 
+import sys
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(parent_dir)
+
 import utils
 import arg_parser
 from lip import SimpleLipNet
