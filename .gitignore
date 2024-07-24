@@ -3,6 +3,7 @@ tensorboard
 commands
 
 *.log
+*.out
 *.pt
 *.tar
 *.pkl
