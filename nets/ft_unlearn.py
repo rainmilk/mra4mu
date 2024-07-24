@@ -7,7 +7,12 @@ import time
 import numpy as np
 from torch.utils.data import Dataset
 
+import sys
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(parent_dir)
+
 import utils
+
 import arg_parser
 from train import get_loader
 from models.VGG_LTH import vgg16_bn_lth
