@@ -1,4 +1,5 @@
 import os
+import copy
 
 from torchvision import models
 from torch import nn
@@ -14,7 +15,7 @@ sys.path.append(parent_dir)
 import utils
 
 import arg_parser
-from train import get_loader
+from train import get_loader, SimpleLipNet, lip_train, lip_test, get_loader_by_data
 from models.VGG_LTH import vgg16_bn_lth
 
 
@@ -71,7 +72,7 @@ def train(train_loader, model, model_path, args):
             #     )
             #     start = time.time()
 
-        # print("train_accuracy {top1.avg:.3f}".format(top1=top1))
+        # print("unlearn model train_accuracy {top1.avg:.3f}".format(top1=top1))
 
     state = {"state_dict": model.state_dict()}
     torch.save(state, model_path)
@@ -116,6 +117,7 @@ def print_acc(test_preds, forget_preds):
     forget_label = np.load(os.path.join(args.test_data_dir, 'forget_label.npy'))
     forget_acc_unlearn = np.mean(forget_preds == forget_label)
 
+    print('***********************************************************')
     print('test_acc: %.2f, forget_acc: %.2f' % (test_acc_unlearn * 100, forget_acc_unlearn * 100))
 
     label_list = sorted(list(set(forget_label)))
@@ -128,8 +130,16 @@ def print_acc(test_preds, forget_preds):
 
 
 def main():
-    test_loader = get_loader('test', args.test_data_dir, args.batch_size, args.dataset)
-    forget_loader = get_loader('forget', args.test_data_dir, args.batch_size, args.dataset)
+    # load forget test data
+    test_data_path = os.path.join(args.test_data_dir, 'test_data.npy')
+    test_label_path = os.path.join(args.test_data_dir, 'test_label.npy')
+    test_data = np.load(test_data_path)
+    test_label = np.load(test_label_path)
+
+    forget_data_path = os.path.join(args.test_data_dir, 'forget_data.npy')
+    forget_label_path = os.path.join(args.test_data_dir, 'forget_label.npy')
+    forget_data = np.load(forget_data_path)
+    forget_label = np.load(forget_label_path)
 
     # load unlearn model
     if args.arch == 'resnet18':
@@ -139,18 +149,43 @@ def main():
     elif args.arch == 'vgg16_bn_lth':
         unlearn_model = vgg16_bn_lth(num_classes=args.num_classes)
     model_path = os.path.join(args.save_dir, args.unlearn + 'checkpoint.pth.tar')
+    model_path_ft = os.path.join(args.save_dir, args.unlearn + 'checkpoint_ft.pth.tar')
     checkpoint = torch.load(model_path)
     unlearn_model.load_state_dict(checkpoint["state_dict"], strict=False)
     unlearn_model.cuda()
 
-    # load lip foreget predicts
-    lip_forget_pred = np.load(os.path.join(args.save_forget_dir, 'forget_lip_pred.npy'))
+    # load lip net
+    resnet = models.resnet18(pretrained=False, num_classes=512)
+    resnet = nn.Sequential(*list(resnet.children())[:-1])
+    lip_model = SimpleLipNet(resnet, 512, args.num_classes, [512])
+    lip_model.cuda()
+
+    ckpt_path = os.path.join(args.lip_save_dir, 'checkpoint.pth.tar')
+    checkpoint = torch.load(ckpt_path)
+    lip_model.load_state_dict(checkpoint["state_dict"], strict=False)
+
+    # dataloader
+    test_loader = get_loader('test', args.test_data_dir, args.batch_size, args.dataset)
+    forget_loader = get_loader('forget', args.test_data_dir, args.batch_size, args.dataset)
+
+    one_channel = False
+    if args.dataset == 'fashionMNIST':
+        one_channel = True
+        test_loader_unlearn = get_loader('test', args.test_data_dir, args.batch_size, args.dataset, one_channel=one_channel)
+        forget_loader_unlearn = get_loader('forget', args.test_data_dir, args.batch_size, args.dataset, one_channel=one_channel)
+    else:
+        test_loader_unlearn = copy.deepcopy(test_loader)
+        forget_loader_unlearn = copy.deepcopy(forget_loader)
+
+    # lip forget predicts
+    test_embeddings, _ = lip_test(test_loader, lip_model)
+    forget_embeddings, lip_forget_pred = lip_test(forget_loader, lip_model)
 
     print('Before fine-tune:')
     print('unlearn model: %s, dataset: %s' % (args.unlearn, args.dataset))
 
-    test_preds = test(test_loader, unlearn_model)
-    forget_preds = test(forget_loader, unlearn_model)
+    test_preds = test(test_loader_unlearn, unlearn_model)
+    forget_preds = test(forget_loader_unlearn, unlearn_model)
     forget_acc_before = print_acc(test_preds, forget_preds)
 
     if args.finetune_unlearn:
@@ -158,21 +193,36 @@ def main():
         top_forget_acc = forget_acc_before
         early_stop_num = 0
 
-        for i in range(100):
-            print('-----finetune iterate : %d -----' % (i+1))
+        for iter in range(200):
+            print('-----------------------------------finetune iterate : %d -----------------------------' % (iter+1))
 
             # forget lip predicts & unlearn predict
-            rnd_idx = np.random.choice(len(forget_loader.dataset.label), 100)
-            inter_index = lip_forget_pred == forget_preds
-            if sum(inter_index) < 100:
-                inter_index[rnd_idx] = True
-            forget_inter_loader = get_loader('forget_inter', args.test_data_dir, args.batch_size, args.dataset, inter_index, True)
 
-            train(forget_inter_loader, unlearn_model, model_path, args)
+            inter_index = lip_forget_pred == forget_preds
+            print('sum inter index: ', sum(inter_index))
+
+            # forget_inter_loader = get_loader_by_data('inter', args.batch_size, args.dataset, forget_data,
+            #                                          lip_forget_pred, inter_index, label_true=forget_label,
+            #                                          shuffle=True)
+            forget_inter_add_test_loader = get_loader_by_data('inter_and', args.batch_size, args.dataset,
+                                                              forget_data, lip_forget_pred, inter_index,
+                                                              label_true=forget_label, fit_embedding=test_embeddings,
+                                                              query_embedding=forget_embeddings, add_data_all=test_data,
+                                                              add_label_all=test_label, one_channel=one_channel, shuffle=True)
+
+            # train unlearn model
+            train(forget_inter_add_test_loader, unlearn_model, model_path_ft, args)
+
+            # train lip net
+            # ckpt_name = 'checkpoint_ft_%s.pth.tar' % args.unlearn
+            # lip_train(forget_inter_add_test_loader, lip_model, ckpt_name, args)
 
             # print('-----------------after train-----------------------')
-            test_preds = test(test_loader, unlearn_model)
-            forget_preds = test(forget_loader, unlearn_model)
+            test_preds = test(test_loader_unlearn, unlearn_model)
+            forget_preds = test(forget_loader_unlearn, unlearn_model)
+
+            # test_embeddings, _ = lip_test(test_loader, lip_model)
+            # forget_embeddings, lip_forget_pred = lip_test(forget_loader, lip_model)
             forget_acc = print_acc(test_preds, forget_preds)
             if top_forget_acc >= forget_acc:
                 early_stop_num += 1

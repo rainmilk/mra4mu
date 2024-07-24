@@ -56,7 +56,7 @@ python ft_unlearn.py --epoch 10 --unlearn_lr 0.001 --save_dir ../outputs/resnet1
 python ft_unlearn.py --epoch 10 --unlearn_lr 0.001 --save_dir ../outputs/resnet18_cifar100/GA --unlearn GA --lip_save_dir ../outputs/lipnet/cifar100 --test_data_dir ../../data/cifar100 --save_forget_dir ../../data/lipnet/resnet18/cifar100 --dataset cifar100 --num_classes 100 --finetune_unlearn
 
 (4) FF
-python ft_unlearn.py python -u ft_unlearn.py --epoch 10 --unlearn_lr 0.001 --save_dir ../outputs/resnet18_cifar100/FF --unlearn fisher --lip_save_dir ../outputs/lipnet/cifar100 --test_data_dir ../../data/cifar100 --save_forget_dir ../../data/lipnet/resnet18/cifar100 --dataset cifar100 --num_classes 100 --finetune_unlearn
+python ft_unlearn.py --epoch 10 --unlearn_lr 0.001 --save_dir ../outputs/resnet18_cifar100/FF --unlearn fisher --lip_save_dir ../outputs/lipnet/cifar100 --test_data_dir ../../data/cifar100 --save_forget_dir ../../data/lipnet/resnet18/cifar100 --dataset cifar100 --num_classes 100 --finetune_unlearn
 
 (5) IU
 python ft_unlearn.py --epoch 10 --unlearn_lr 0.001 --save_dir ../outputs/resnet18_cifar100/IU --unlearn wfisher --lip_save_dir ../outputs/lipnet/cifar100 --test_data_dir ../../data/cifar100 --save_forget_dir ../../data/lipnet/resnet18/cifar100 --dataset cifar100 --num_classes 100 --finetune_unlearn
@@ -154,7 +154,6 @@ python ft_unlearn.py --epoch 10 --unlearn_lr 0.001 --save_dir ../outputs/vgg16_t
 8. VGG16 fashionMNIST
 (1) retrain
 python ft_unlearn.py --epoch 10 --unlearn_lr 0.001 --save_dir ../outputs/vgg16_fmnist/retrain --unlearn retrain --lip_save_dir ../outputs/lipnet/fmnist --test_data_dir ../../data/fmnist --save_forget_dir ../../data/lipnet/resnet18/fmnist --dataset fashionMNIST --num_classes 10 --finetune_unlearn --arch vgg16_bn_lth
-
 
 (2) FT
 python ft_unlearn.py --epoch 10 --unlearn_lr 0.001 --save_dir ../outputs/vgg16_fmnist/FT --unlearn FT --lip_save_dir ../outputs/lipnet/fmnist --test_data_dir ../../data/fmnist --save_forget_dir ../../data/lipnet/resnet18/fmnist --dataset fashionMNIST --num_classes 10 --finetune_unlearn --arch vgg16_bn_lth
