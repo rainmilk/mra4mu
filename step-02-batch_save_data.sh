@@ -36,6 +36,8 @@ for i in "${!scripts[@]}"; do
     gpus=${gpu_ids[$i]}
 
     echo "Running $script on GPUs $gpus, logging to $log"
+    command="CUDA_VISIBLE_DEVICES=$gpus nohup bash $script > $log 2>&1 &"
+    echo $command
     CUDA_VISIBLE_DEVICES=$gpus nohup bash $script > $log 2>&1 &
 done
 
