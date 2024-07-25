@@ -199,7 +199,11 @@ def main():
         return accuracy
 
     if args.resume:
-        checkpoint = unlearn.load_unlearn_checkpoint(model, device, args)
+        if args.eval_result_ft:
+            ckpt_file = 'checkpoint_ft.pth.tar'
+            checkpoint = unlearn.load_unlearn_checkpoint(model, device, args, ckpt_file)
+        else:
+            checkpoint = unlearn.load_unlearn_checkpoint(model, device, args)
 
     if args.resume and checkpoint is not None:
         model, evaluation_result = checkpoint
@@ -240,7 +244,11 @@ def main():
     if "new_accuracy" not in evaluation_result:
         accuracy = get_accuracy()
         evaluation_result["accuracy"] = accuracy
-        unlearn.save_unlearn_checkpoint(model, evaluation_result, args)
+        if args.eval_result_ft:
+            ft_file = 'eval_result_ft.pth.tar'
+            unlearn.save_unlearn_checkpoint(model, evaluation_result, args, ft_file)
+        else:
+            unlearn.save_unlearn_checkpoint(model, evaluation_result, args)
 
     for deprecated in ["MIA", "SVC_MIA", "SVC_MIA_forget"]:
         if deprecated in evaluation_result:
@@ -286,7 +294,11 @@ def main():
             target_test=None,
             model=model,
         )
-        unlearn.save_unlearn_checkpoint(model, evaluation_result, args)
+        if args.eval_result_ft:
+            ft_file = 'eval_result_ft.pth.tar'
+            unlearn.save_unlearn_checkpoint(model, evaluation_result, args, ft_file)
+        else:
+            unlearn.save_unlearn_checkpoint(model, evaluation_result, args)
 
     """training privacy MIA:
         in distribution: retain

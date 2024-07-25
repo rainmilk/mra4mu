@@ -23,7 +23,7 @@ def plot_training_curve(training_result, save_dir, prefix):
     plt.close()
 
 
-def save_unlearn_checkpoint(model, evaluation_result, args):
+def save_unlearn_checkpoint(model, evaluation_result, args, filename='eval_result.pth.tar'):
     state = {"state_dict": model.state_dict(), "evaluation_result": evaluation_result}
     utils.save_checkpoint(state, False, args.save_dir, args.unlearn)
     utils.save_checkpoint(
@@ -31,12 +31,12 @@ def save_unlearn_checkpoint(model, evaluation_result, args):
         False,
         args.save_dir,
         args.unlearn,
-        filename="eval_result.pth.tar",
+        filename=filename,
     )
 
 
-def load_unlearn_checkpoint(model, device, args):
-    checkpoint = utils.load_checkpoint(device, args.save_dir, args.unlearn)
+def load_unlearn_checkpoint(model, device, args, filename="checkpoint.pth.tar"):
+    checkpoint = utils.load_checkpoint(device, args.save_dir, args.unlearn, filename)
     if checkpoint is None or checkpoint.get("state_dict") is None:
         return None
 

@@ -4,7 +4,7 @@ import torch
 import pandas as pd
 
 
-def get_mia(output_root, data_name, backbone_name, model_names):
+def get_mia(output_root, data_name, backbone_name, model_names, eval_result_file):
     data_path = backbone_name + '_' + data_name
     output_path = os.path.join(output_root, data_path)
 
@@ -20,7 +20,7 @@ def get_mia(output_root, data_name, backbone_name, model_names):
             model_true_name = 'fisher'
         elif model_name == 'IU':
             model_true_name = 'wfisher'
-        eval_file = model_true_name + 'eval_result.pth.tar'
+        eval_file = model_true_name + eval_result_file
         eval_result_path = os.path.join(eval_path, eval_file)
         if not os.path.exists(eval_result_path):
             print(eval_result_path)
@@ -45,12 +45,16 @@ if __name__ == "__main__":
     data_list = ['cifar10', 'cifar100', 'tinyimg', 'fmnist']
     backbones = ['resnet18', 'vgg16']
     eval_all = {}
+
+    # eval_file = 'eval_result.pth.tar'
+    eval_file = 'eval_result_ft.pth.tar'
     for data in data_list:
         for backbone in backbones:
-            eval_result = get_mia(path, data, backbone, unlearn_model_names)
+            eval_result = get_mia(path, data, backbone, unlearn_model_names, eval_file)
             data_key = data + '_' + backbone
             eval_all[data_key] = eval_result
 
     df_eval = pd.DataFrame.from_dict(eval_all)
     df_eval.index = unlearn_model_names
     df_eval.to_csv('mia_after.csv')
+    print('save mia done!')
