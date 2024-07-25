@@ -4,7 +4,7 @@ import torch
 import pandas as pd
 
 
-def get_mia(output_root, data_name, backbone_name, model_names):
+def get_acc(output_root, data_name, backbone_name, model_names):
     data_path = backbone_name + '_' + data_name
     output_path = os.path.join(output_root, data_path)
 
@@ -28,13 +28,8 @@ def get_mia(output_root, data_name, backbone_name, model_names):
             break
 
         eval_result = torch.load(eval_result_path)
-        mia_efficacy = eval_result['SVC_MIA_forget_efficacy']
-        mia_result = [round(float(mia_efficacy['correctness'] * 100), 2),
-                      round(float(mia_efficacy['confidence'] * 100), 2),
-                      round(float(mia_efficacy['entropy'] * 100), 2),
-                      round(float(mia_efficacy['m_entropy'] * 100), 2),
-                      round(float(mia_efficacy['prob'] * 100), 2)]
-        eval_results.append(mia_result)
+        new_accuracy = eval_result['accuracy']
+        eval_results.append(new_accuracy)
 
     return eval_results
 
@@ -47,10 +42,10 @@ if __name__ == "__main__":
     eval_all = {}
     for data in data_list:
         for backbone in backbones:
-            eval_result = get_mia(path, data, backbone, unlearn_model_names)
+            eval_result = get_acc(path, data, backbone, unlearn_model_names)
             data_key = data + '_' + backbone
             eval_all[data_key] = eval_result
 
     df_eval = pd.DataFrame.from_dict(eval_all)
     df_eval.index = unlearn_model_names
-    df_eval.to_csv('mia_after.csv')
+    df_eval.to_csv('unlearn_acc.csv')
