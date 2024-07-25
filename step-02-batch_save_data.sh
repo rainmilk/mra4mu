@@ -7,10 +7,10 @@ fi
 
 # 定义需要执行的脚本及其对应的日志文件
 scripts=(
-    "scripts/sh/save_predicts_cifar100.sh"
-    "scripts/sh/save_predicts_cifar10.sh"
-    "scripts/sh/save_predicts_fmnist.sh"
-    "scripts/sh/save_predicts_tinyimgnet.sh"
+    "scripts/sh/save_predicts_cifar100_ailab.sh"
+    "scripts/sh/save_predicts_cifar10_ailab.sh"
+    "scripts/sh/save_predicts_fmnist_ailab.sh"
+    "scripts/sh/save_predicts_tinyimgnet_ailab.sh"
 )
 
 # 定义对应的日志文件名
