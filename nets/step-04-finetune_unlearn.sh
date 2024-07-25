@@ -84,8 +84,7 @@ run_task() {
         --test_data_dir $test_data_dir \
         --save_forget_dir $save_forget_dir \
         --dataset $dataset \
-        --num_classes $(if [ "$dataset" = "cifar100" ] || [ "$dataset" = "tinyimgnet" ]; then echo 100; else echo 10; fi) \
-        --finetune_unlearn \
+        --num_classes $(if [ "$dataset" = "cifar100" ] || [ "$dataset" = "tinyimgnet" ]; then echo 100; elif [ "$dataset" = "fashionMNIST" ]; then echo 10; else echo 10; fi) \
         --arch $arch \
         > $log_file 2>&1 &
 }

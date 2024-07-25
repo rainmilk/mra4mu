@@ -22,7 +22,7 @@ if [ ! -d "$BASE_OUTPUT_DIR" ]; then
 fi
 
 # Directory for saving the training outputs like Models and Logs
-LIPS_OUTPUT_DIR="/nvme/szh/data/3ai/lips/outputs/lipnet"
+LIPS_OUTPUT_DIR="/nvme/szh/data/3ai/lips/outputs/lipnet/resnet18"
 
 if [ ! -d "$LIPS_OUTPUT_DIR" ]; then
     echo "Directory for saving lipschitz models not found: $LIPS_OUTPUT_DIR"
