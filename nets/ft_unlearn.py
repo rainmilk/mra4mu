@@ -136,12 +136,13 @@ def print_acc(test_preds, forget_preds):
 
 
 def main():
-    # load forget test data
+    # load test data
     test_data_path = os.path.join(args.test_data_dir, "test_data.npy")
     test_label_path = os.path.join(args.test_data_dir, "test_label.npy")
     test_data = np.load(test_data_path)
     test_label = np.load(test_label_path)
 
+    # load forget data
     forget_data_path = os.path.join(args.test_data_dir, "forget_data.npy")
     forget_label_path = os.path.join(args.test_data_dir, "forget_label.npy")
     forget_data = np.load(forget_data_path)
@@ -224,9 +225,17 @@ def main():
             inter_index = lip_forget_pred == forget_preds
             print("sum inter index: ", sum(inter_index))
 
-            # forget_inter_loader = get_loader_by_data('inter', args.batch_size, args.dataset, forget_data,
-            #                                          lip_forget_pred, inter_index, label_true=forget_label,
-            #                                          shuffle=True)
+            # forget_inter_loader = get_loader_by_data(
+            #     "inter",
+            #     args.batch_size,
+            #     args.dataset,
+            #     forget_data,
+            #     lip_forget_pred,
+            #     inter_index,
+            #     label_true=forget_label,
+            #     shuffle=True,
+            # )
+
             forget_inter_add_test_loader = get_loader_by_data(
                 "inter_and",
                 args.batch_size,
