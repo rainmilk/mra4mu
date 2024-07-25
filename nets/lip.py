@@ -5,9 +5,10 @@ from torchvision import models
 
 
 class SimpleLipNet(nn.Module):
-    '''
+    """
     Implementation of Lipschitz regularized network
-    '''
+    """
+
     def __init__(self, backbone, input_sz, output_sz, hidden_layers=[]):
         super(SimpleLipNet, self).__init__()
 
@@ -25,7 +26,7 @@ class SimpleLipNet(nn.Module):
         self.norm = nn.BatchNorm1d(hidden_layers[0])
         self.fc = nn.Linear(hidden_layers[0], output_sz)
 
-    def forward(self, inputs):   # [N,C,H,W]
+    def forward(self, inputs):  # [N,C,H,W]
         x = self.backbone(inputs)
         lip_out = torch.flatten(x, 1)
         lip_out = self.norm(self.lip_layer(lip_out))
@@ -34,7 +35,7 @@ class SimpleLipNet(nn.Module):
         return lip_out, out
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     resnet = models.resnet18(pretrained=False, num_classes=512)
     resnet = nn.Sequential(*list(resnet.children())[:-1])
     print(resnet)

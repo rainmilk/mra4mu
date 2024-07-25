@@ -9,7 +9,8 @@ import numpy as np
 from torch.utils.data import Dataset
 
 import sys
-parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(parent_dir)
 
 import utils
@@ -26,7 +27,7 @@ def train(train_loader, model, model_path, args):
         model.parameters(),
         args.unlearn_lr,
         momentum=args.momentum,
-        weight_decay=args.weight_decay
+        weight_decay=args.weight_decay,
     )
 
     # switch to train mode
@@ -39,7 +40,7 @@ def train(train_loader, model, model_path, args):
     for epoch in range(1, args.epochs + 1):
         for i, (image, target) in enumerate(train_loader):
             image = image.cuda()
-            #target = target.cuda()
+            # target = target.cuda()
             target = target.long().cuda()
 
             # compute output
@@ -111,45 +112,50 @@ class CustomDataset(Dataset):
 
 
 def print_acc(test_preds, forget_preds):
-    test_label = np.load(os.path.join(args.test_data_dir, 'test_label.npy'))
+    test_label = np.load(os.path.join(args.test_data_dir, "test_label.npy"))
     test_acc_unlearn = np.mean(test_label == test_preds)
 
-    forget_label = np.load(os.path.join(args.test_data_dir, 'forget_label.npy'))
+    forget_label = np.load(os.path.join(args.test_data_dir, "forget_label.npy"))
     forget_acc_unlearn = np.mean(forget_preds == forget_label)
 
-    print('***********************************************************')
-    print('test_acc: %.2f, forget_acc: %.2f' % (test_acc_unlearn * 100, forget_acc_unlearn * 100))
+    print("***********************************************************")
+    print(
+        "test_acc: %.2f, forget_acc: %.2f"
+        % (test_acc_unlearn * 100, forget_acc_unlearn * 100)
+    )
 
     label_list = sorted(list(set(forget_label)))
     for label in label_list:
         cls_index = forget_label == label
-        forget_acc_unlearn_cls = np.mean(forget_preds[cls_index] == forget_label[cls_index])
-        print('label: %s, forget_acc: %.2f' % (label, forget_acc_unlearn_cls*100))
+        forget_acc_unlearn_cls = np.mean(
+            forget_preds[cls_index] == forget_label[cls_index]
+        )
+        print("label: %s, forget_acc: %.2f" % (label, forget_acc_unlearn_cls * 100))
 
     return forget_acc_unlearn
 
 
 def main():
     # load forget test data
-    test_data_path = os.path.join(args.test_data_dir, 'test_data.npy')
-    test_label_path = os.path.join(args.test_data_dir, 'test_label.npy')
+    test_data_path = os.path.join(args.test_data_dir, "test_data.npy")
+    test_label_path = os.path.join(args.test_data_dir, "test_label.npy")
     test_data = np.load(test_data_path)
     test_label = np.load(test_label_path)
 
-    forget_data_path = os.path.join(args.test_data_dir, 'forget_data.npy')
-    forget_label_path = os.path.join(args.test_data_dir, 'forget_label.npy')
+    forget_data_path = os.path.join(args.test_data_dir, "forget_data.npy")
+    forget_label_path = os.path.join(args.test_data_dir, "forget_label.npy")
     forget_data = np.load(forget_data_path)
     forget_label = np.load(forget_label_path)
 
     # load unlearn model
-    if args.arch == 'resnet18':
+    if args.arch == "resnet18":
         unlearn_model = models.resnet18(pretrained=False, num_classes=args.num_classes)
-        if args.dataset == 'fashionMNIST':
+        if args.dataset == "fashionMNIST":
             unlearn_model.conv1 = nn.Conv2d(1, 64, 7, 2, 3, bias=False)
-    elif args.arch == 'vgg16_bn_lth':
+    elif args.arch == "vgg16_bn_lth":
         unlearn_model = vgg16_bn_lth(num_classes=args.num_classes)
-    model_path = os.path.join(args.save_dir, args.unlearn + 'checkpoint.pth.tar')
-    model_path_ft = os.path.join(args.save_dir, args.unlearn + 'checkpoint_ft.pth.tar')
+    model_path = os.path.join(args.save_dir, args.unlearn + "checkpoint.pth.tar")
+    model_path_ft = os.path.join(args.save_dir, args.unlearn + "checkpoint_ft.pth.tar")
     checkpoint = torch.load(model_path)
     unlearn_model.load_state_dict(checkpoint["state_dict"], strict=False)
     unlearn_model.cuda()
@@ -160,19 +166,33 @@ def main():
     lip_model = SimpleLipNet(resnet, 512, args.num_classes, [512])
     lip_model.cuda()
 
-    ckpt_path = os.path.join(args.lip_save_dir, 'checkpoint.pth.tar')
+    ckpt_path = os.path.join(args.lip_save_dir, "checkpoint.pth.tar")
     checkpoint = torch.load(ckpt_path)
     lip_model.load_state_dict(checkpoint["state_dict"], strict=False)
 
     # dataloader
-    test_loader = get_loader('test', args.test_data_dir, args.batch_size, args.dataset)
-    forget_loader = get_loader('forget', args.test_data_dir, args.batch_size, args.dataset)
+    test_loader = get_loader("test", args.test_data_dir, args.batch_size, args.dataset)
+    forget_loader = get_loader(
+        "forget", args.test_data_dir, args.batch_size, args.dataset
+    )
 
     one_channel = False
-    if args.dataset == 'fashionMNIST':
+    if args.dataset == "fashionMNIST":
         one_channel = True
-        test_loader_unlearn = get_loader('test', args.test_data_dir, args.batch_size, args.dataset, one_channel=one_channel)
-        forget_loader_unlearn = get_loader('forget', args.test_data_dir, args.batch_size, args.dataset, one_channel=one_channel)
+        test_loader_unlearn = get_loader(
+            "test",
+            args.test_data_dir,
+            args.batch_size,
+            args.dataset,
+            one_channel=one_channel,
+        )
+        forget_loader_unlearn = get_loader(
+            "forget",
+            args.test_data_dir,
+            args.batch_size,
+            args.dataset,
+            one_channel=one_channel,
+        )
     else:
         test_loader_unlearn = copy.deepcopy(test_loader)
         forget_loader_unlearn = copy.deepcopy(forget_loader)
@@ -181,34 +201,47 @@ def main():
     test_embeddings, _ = lip_test(test_loader, lip_model)
     forget_embeddings, lip_forget_pred = lip_test(forget_loader, lip_model)
 
-    print('Before fine-tune:')
-    print('unlearn model: %s, dataset: %s' % (args.unlearn, args.dataset))
+    print("Before fine-tune:")
+    print("unlearn model: %s, dataset: %s" % (args.unlearn, args.dataset))
 
     test_preds = test(test_loader_unlearn, unlearn_model)
     forget_preds = test(forget_loader_unlearn, unlearn_model)
     forget_acc_before = print_acc(test_preds, forget_preds)
 
     if args.finetune_unlearn:
-        print('Finetuning...')
+        print("Finetuning...")
         top_forget_acc = forget_acc_before
         early_stop_num = 0
 
         for iter in range(200):
-            print('-----------------------------------finetune iterate : %d -----------------------------' % (iter+1))
+            print(
+                "-----------------------------------finetune iterate : %d -----------------------------"
+                % (iter + 1)
+            )
 
             # forget lip predicts & unlearn predict
 
             inter_index = lip_forget_pred == forget_preds
-            print('sum inter index: ', sum(inter_index))
+            print("sum inter index: ", sum(inter_index))
 
             # forget_inter_loader = get_loader_by_data('inter', args.batch_size, args.dataset, forget_data,
             #                                          lip_forget_pred, inter_index, label_true=forget_label,
             #                                          shuffle=True)
-            forget_inter_add_test_loader = get_loader_by_data('inter_and', args.batch_size, args.dataset,
-                                                              forget_data, lip_forget_pred, inter_index,
-                                                              label_true=forget_label, fit_embedding=test_embeddings,
-                                                              query_embedding=forget_embeddings, add_data_all=test_data,
-                                                              add_label_all=test_label, one_channel=one_channel, shuffle=True)
+            forget_inter_add_test_loader = get_loader_by_data(
+                "inter_and",
+                args.batch_size,
+                args.dataset,
+                forget_data,
+                lip_forget_pred,
+                inter_index,
+                label_true=forget_label,
+                fit_embedding=test_embeddings,
+                query_embedding=forget_embeddings,
+                add_data_all=test_data,
+                add_label_all=test_label,
+                one_channel=one_channel,
+                shuffle=True,
+            )
 
             # train unlearn model
             train(forget_inter_add_test_loader, unlearn_model, model_path_ft, args)

@@ -18,7 +18,6 @@ def parse_args():
         default="./tiny-imagenet-200",
         help="dir to tiny-imagenet",
         # this para is optional,
-        
     )
     parser.add_argument("--num_workers", type=int, default=4)
     parser.add_argument("--num_classes", type=int, default=10)
@@ -57,15 +56,42 @@ def parse_args():
     )
     parser.add_argument("--resume", action="store_true", help="resume from checkpoint")
     # todo
-    parser.add_argument("--load_ff", action="store_true", help="load finetune model and unlearn train")
-    parser.add_argument("--shuffle", action="store_false", default=True, help="shuffle dataset")
-    parser.add_argument("--save_data", action="store_true", default=False, help="save dataset")
-    parser.add_argument("--save_data_path", type=str, default='', help="save dataset path")
-    parser.add_argument("--lip_save_dir", type=str, default='', help="save lip_net path")
-    parser.add_argument("--resume_lipnet", action="store_true", default=False, help="resume lip_net path")
-    parser.add_argument("--test_data_dir", type=str, default='', help="lipnet test data path")
-    parser.add_argument("--save_forget_dir", type=str, default='', help="save lipnet forget predict path")
-    parser.add_argument("--finetune_unlearn", action="store_true", default=False, help="finetune unlearn model")
+    parser.add_argument(
+        "--load_ff", action="store_true", help="load finetune model and unlearn train"
+    )
+    parser.add_argument(
+        "--shuffle", action="store_false", default=True, help="shuffle dataset"
+    )
+    parser.add_argument(
+        "--save_data", action="store_true", default=False, help="save dataset"
+    )
+    parser.add_argument(
+        "--save_data_path", type=str, default="", help="save dataset path"
+    )
+    parser.add_argument(
+        "--lip_save_dir", type=str, default="", help="save lip_net path"
+    )
+    parser.add_argument(
+        "--resume_lipnet",
+        action="store_true",
+        default=False,
+        help="resume lip_net path",
+    )
+    parser.add_argument(
+        "--test_data_dir", type=str, default="", help="lipnet test data path"
+    )
+    parser.add_argument(
+        "--save_forget_dir",
+        type=str,
+        default="",
+        help="save lipnet forget predict path",
+    )
+    parser.add_argument(
+        "--finetune_unlearn",
+        action="store_true",
+        default=False,
+        help="finetune unlearn model",
+    )
 
     parser.add_argument("--checkpoint", type=str, default=None, help="checkpoint file")
     parser.add_argument(
@@ -139,7 +165,7 @@ def parse_args():
         help="Number of data to forget",
     )
     parser.add_argument(
-        "--class_to_replace", type=str, default='', help="Specific class to forget"
+        "--class_to_replace", type=str, default="", help="Specific class to forget"
     )
     parser.add_argument(
         "--indexes_to_replace",

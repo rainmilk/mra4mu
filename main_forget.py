@@ -169,12 +169,12 @@ def main():
             print(f"{name} acc: {val_acc}")
 
             if args.save_data:
-                if name == 'test':
+                if name == "test":
                     save_path = args.save_data_path
-                    np.save(os.path.join(save_path, 'test_predicts.npy'), predicts)
-                if name == 'forget':
+                    np.save(os.path.join(save_path, "test_predicts.npy"), predicts)
+                if name == "forget":
                     save_path = args.save_data_path
-                    np.save(os.path.join(save_path, 'forget_predicts.npy'), predicts)
+                    np.save(os.path.join(save_path, "forget_predicts.npy"), predicts)
 
         class_replace_list = args.class_to_replace.split(",")
         f_dataset = copy.deepcopy(forget_dataset)
@@ -261,11 +261,17 @@ def main():
         utils.dataset_convert_to_test(forget_loader, args)
         utils.dataset_convert_to_test(test_loader, args)
         shadow_test_len = test_len // 8
-        shadow_test = torch.utils.data.Subset(test_loader.dataset, list(range(shadow_test_len)))
+        shadow_test = torch.utils.data.Subset(
+            test_loader.dataset, list(range(shadow_test_len))
+        )
         random_retain = np.random.choice(retain_len, shadow_test_len // 2)
-        random_forget = np.random.choice(np.arange(retain_len, retain_len+forget_len), shadow_test_len // 2)
+        random_forget = np.random.choice(
+            np.arange(retain_len, retain_len + forget_len), shadow_test_len // 2
+        )
         random_idx = np.concatenate([random_retain, random_forget], axis=0)
-        shadow_train = torch.utils.data.Subset(retain_dataset + forget_dataset, random_idx)
+        shadow_train = torch.utils.data.Subset(
+            retain_dataset + forget_dataset, random_idx
+        )
         shadow_train_loader = torch.utils.data.DataLoader(
             shadow_train, batch_size=args.batch_size, shuffle=False
         )
