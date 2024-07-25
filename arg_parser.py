@@ -92,6 +92,12 @@ def parse_args():
         default=False,
         help="finetune unlearn model",
     )
+    parser.add_argument(
+        "--eval_result_ft",
+        action="store_true",
+        default=False,
+        help="get eval result by finetune model",
+    )
 
     parser.add_argument("--checkpoint", type=str, default=None, help="checkpoint file")
     parser.add_argument(

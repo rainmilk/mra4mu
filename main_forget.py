@@ -135,19 +135,23 @@ def main():
     if args.save_data:
         if not args.shuffle:
             path = args.save_data_path
-            os.makedirs(path, exist_ok=True)
-            if args.dataset == "TinyImagenet":
-                test_data = test_loader.dataset.imgs
-                forget_data = forget_dataset.imgs
-            else:
-                test_data = test_loader.dataset.data
-                forget_data = forget_dataset.data
-            np.save(os.path.join(path, "test_data.npy"), test_data)
-            np.save(os.path.join(path, "test_label.npy"), test_loader.dataset.targets)
-            np.save(os.path.join(path, "forget_data.npy"), forget_data)
-            np.save(os.path.join(path, "forget_label.npy"), forget_dataset.targets)
+            save_data_dir = os.path.split(os.path.split(path)[0])[0]
+            os.makedirs(save_data_dir, exist_ok=True)
+            test_data_path = os.path.join(save_data_dir, 'test_data.npy')
+            if not os.path.exists(test_data_path):
+                if args.dataset == "TinyImagenet":
+                    test_data = test_loader.dataset.imgs
+                    forget_data = forget_dataset.imgs
+                else:
+                    test_data = test_loader.dataset.data
+                    forget_data = forget_dataset.data
 
-            print("save test data label and forget data label done!")
+                np.save(os.path.join(save_data_dir, "test_data.npy"), test_data)
+                np.save(os.path.join(save_data_dir, "test_label.npy"), test_loader.dataset.targets)
+                np.save(os.path.join(save_data_dir, "forget_data.npy"), forget_data)
+                np.save(os.path.join(save_data_dir, "forget_label.npy"), forget_dataset.targets)
+
+                print("save test data label and forget data label done!")
         else:
             print("set --shuffle false to save data!!!")
 
@@ -169,12 +173,14 @@ def main():
             print(f"{name} acc: {val_acc}")
 
             if args.save_data:
+                save_path = args.save_data_path
+                os.makedirs(save_path, exist_ok=True)
                 if name == "test":
-                    save_path = args.save_data_path
                     np.save(os.path.join(save_path, "test_predicts.npy"), predicts)
+                    print("save test predicts done!")
                 if name == "forget":
-                    save_path = args.save_data_path
                     np.save(os.path.join(save_path, "forget_predicts.npy"), predicts)
+                    print("save forget predicts done!")
 
         class_replace_list = args.class_to_replace.split(",")
         f_dataset = copy.deepcopy(forget_dataset)
