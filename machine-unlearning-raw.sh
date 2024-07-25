@@ -2,16 +2,14 @@
 
 # 1.1.1 Resnet18 Cifar10
 
-# (0) backbone_ft   
-# python -u main_forget.py --save_dir ./outputs/resnet18_cifar10/finetune_backbone --unlearn retrain --class_to_replace 0 --num_indexes_to_replace 1 --unlearn_epochs 100 --unlearn_lr 0.1 --arch resnet18
-# Resnet18-Cifar10-bbft.log
+# (0) backbone_ft
+nohup python -u main_forget.py --save_dir ./outputs/resnet18_cifar10/finetune_backbone --unlearn retrain --class_to_replace 0 --num_indexes_to_replace 1 --unlearn_epochs 100 --unlearn_lr 0.1 --arch resnet18 > Resnet18-Cifar10-bbft.log 2>&1 &
 
 # (1) retrain
-# python -u main_forget.py --save_dir ./outputs/resnet18_cifar10/retrain --unlearn retrain --class_to_replace 0,1,3,5,6 --num_indexes_to_replace 2250 --unlearn_epochs 100 --unlearn_lr 0.1 --arch resnet18
-# Resnet18-Cifar10-retrain.log
+nohup python -u main_forget.py --save_dir ./outputs/resnet18_cifar10/retrain --unlearn retrain --class_to_replace 0,1,3,5,6 --num_indexes_to_replace 2250 --unlearn_epochs 100 --unlearn_lr 0.1 --arch resnet18 > Resnet18-Cifar10-retrain.log 2>&1 &
 
 # (2) FT
-# nohup python -u main_forget.py --save_dir ./outputs/resnet18_cifar10/FT --unlearn FT --class_to_replace 0,1,3,5,6 --num_indexes_to_replace 2250 --unlearn_epochs 100 --unlearn_lr 0.1 --arch resnet18 --load_ff --resume > Resnet18-Cifar10-ft.log 2>&1 &
+nohup python -u main_forget.py --save_dir ./outputs/resnet18_cifar10/FT --unlearn FT --class_to_replace 0,1,3,5,6 --num_indexes_to_replace 2250 --unlearn_epochs 100 --unlearn_lr 0.1 --arch resnet18 --load_ff --resume > Resnet18-Cifar10-ft.log 2>&1 &
 
 # (3) GA
 nohup python -u main_forget.py --save_dir ./outputs/resnet18_cifar10/GA --unlearn GA --class_to_replace 0,1,3,5,6 --num_indexes_to_replace 2250 --unlearn_epochs 4 --unlearn_lr 0.0001 --arch resnet18 --load_ff --resume > Resnet18-Cifar10-ga.log 2>&1 &
