@@ -42,8 +42,8 @@ if __name__ == "__main__":
     backbones = ['resnet18', 'vgg16']
     eval_all = {}
 
-    # eval_file = 'eval_result.pth.tar'
-    eval_file = 'eval_result_ft.pth.tar'
+    eval_file = 'eval_result.pth.tar'
+    # eval_file = 'eval_result_ft.pth.tar'
     for data in data_list:
         for backbone in backbones:
             eval_result = get_acc(path, data, backbone, unlearn_model_names, eval_file)
