@@ -212,6 +212,9 @@ def get_loader_by_data(
         # add_label = add_label_all[add_idx]
 
         # add test data by unlearn and lipnet inter
+        # idx = np.where(add_inter_index)[0]
+        # idx = np.random.choice(idx, len(inter_index) // 2)
+        # add_inter_index[idx] = False
         add_data = add_data_all[add_inter_index]
         add_label = add_label_all[add_inter_index]
 

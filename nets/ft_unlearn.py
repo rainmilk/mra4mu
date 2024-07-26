@@ -273,12 +273,30 @@ def main():
                 shuffle=True,
             )
 
+            forget_inter_add_test_loader_lip = forget_inter_add_test_loader
+            if one_channel:
+                forget_inter_add_test_loader_lip = get_loader_by_data(
+                    "inter_and",
+                    args.batch_size,
+                    args.dataset,
+                    forget_data,
+                    forget_preds,
+                    inter_index,
+                    label_true=forget_label,
+                    fit_embedding=test_embeddings,
+                    query_embedding=forget_embeddings,
+                    add_data_all=test_data,
+                    add_label_all=test_label,
+                    one_channel=False,
+                    add_inter_index=test_inter_index,
+                    shuffle=True,
+                )
+
+            # train lip model
+            lip_train(forget_inter_add_test_loader_lip, lip_model, lip_ckpt_path_ft, args)
+
             # train unlearn model
             train(forget_inter_add_test_loader, unlearn_model, model_path_ft, args)
-
-            # train lip net
-            # ckpt_name = 'checkpoint_ft_%s.pth.tar' % args.unlearn
-            lip_train(forget_inter_add_test_loader, lip_model, lip_ckpt_path_ft, args)
 
             # print('-----------------after train-----------------------')
             test_preds = test(test_loader_unlearn, unlearn_model)
