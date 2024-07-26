@@ -35,7 +35,8 @@ def copy_backbone_ckpt(output_root, data_name, backbone_name, model_names):
 
 
 if __name__ == "__main__":
-    path = '../outputs_test'
+    # path = '../outputs_test'
+    path = '/nvme/szh/data/3ai/lips/outputs'
     unlearn_model_names = ['FT', 'FF', 'GA', 'IU', 'FT_prune']
     data_list = ['cifar10', 'cifar100', 'tinyimg', 'fmnist']
     backbones = ['resnet18', 'vgg16']
