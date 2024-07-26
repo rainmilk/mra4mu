@@ -168,6 +168,7 @@ def main():
     lip_model.cuda()
 
     ckpt_path = os.path.join(args.lip_save_dir, "checkpoint.pth.tar")
+    lip_ckpt_path_ft = os.path.join(args.save_dir, "lipnet_checkpoint_ft.pth.tar")
     checkpoint = torch.load(ckpt_path)
     lip_model.load_state_dict(checkpoint["state_dict"], strict=False)
 
@@ -199,7 +200,7 @@ def main():
         forget_loader_unlearn = copy.deepcopy(forget_loader)
 
     # lip forget predicts
-    test_embeddings, _ = lip_test(test_loader, lip_model)
+    test_embeddings, lip_list_pred = lip_test(test_loader, lip_model)
     forget_embeddings, lip_forget_pred = lip_test(forget_loader, lip_model)
 
     print("Before fine-tune:")
@@ -207,7 +208,10 @@ def main():
 
     test_preds = test(test_loader_unlearn, unlearn_model)
     forget_preds = test(forget_loader_unlearn, unlearn_model)
-    forget_acc_before = print_acc(test_preds, forget_preds)
+    # unlearn acc
+    # forget_acc_before = print_acc(test_preds, forget_preds)
+    # lip acc
+    forget_acc_before = print_acc(lip_list_pred, lip_forget_pred)
 
     if args.finetune_unlearn:
         print("Finetuning...")
@@ -221,9 +225,12 @@ def main():
             )
 
             # forget lip predicts & unlearn predict
-
             inter_index = lip_forget_pred == forget_preds
-            print("sum inter index: ", sum(inter_index))
+            print("sum forget inter index: ", sum(inter_index))
+
+            # test lip predicts & unlearn predict
+            test_inter_index = lip_list_pred == test_preds
+            print("sum test inter index: ", sum(test_inter_index))
 
             # forget_inter_loader = get_loader_by_data(
             #     "inter",
@@ -249,6 +256,7 @@ def main():
                 add_data_all=test_data,
                 add_label_all=test_label,
                 one_channel=one_channel,
+                add_inter_index=test_inter_index,
                 shuffle=True,
             )
 
@@ -257,15 +265,21 @@ def main():
 
             # train lip net
             # ckpt_name = 'checkpoint_ft_%s.pth.tar' % args.unlearn
-            # lip_train(forget_inter_add_test_loader, lip_model, ckpt_name, args)
+            lip_train(forget_inter_add_test_loader, lip_model, lip_ckpt_path_ft, args)
 
             # print('-----------------after train-----------------------')
             test_preds = test(test_loader_unlearn, unlearn_model)
             forget_preds = test(forget_loader_unlearn, unlearn_model)
 
-            # test_embeddings, _ = lip_test(test_loader, lip_model)
-            # forget_embeddings, lip_forget_pred = lip_test(forget_loader, lip_model)
-            forget_acc = print_acc(test_preds, forget_preds)
+            test_embeddings, lip_test_pred = lip_test(test_loader, lip_model)
+            forget_embeddings, lip_forget_pred = lip_test(forget_loader, lip_model)
+
+            # unlearn acc
+            # forget_acc = print_acc(test_preds, forget_preds)
+
+            # lipnet acc
+            forget_acc = print_acc(lip_test_pred, lip_forget_pred)
+
             if top_forget_acc >= forget_acc:
                 early_stop_num += 1
             else:

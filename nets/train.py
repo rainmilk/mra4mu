@@ -18,7 +18,7 @@ import arg_parser
 from lip import SimpleLipNet
 
 
-def lip_train(train_loader, model, ckpt_name, args):
+def lip_train(train_loader, model, model_path, args):
     loss_fn = nn.CrossEntropyLoss()
     top1 = utils.AverageMeter()
     optimizer = torch.optim.SGD(
@@ -69,11 +69,11 @@ def lip_train(train_loader, model, ckpt_name, args):
             #     )
             #     start = time.time()
 
-        print("lip net train_accuracy {top1.avg:.3f}".format(top1=top1))
+        # print("lip net train_accuracy {top1.avg:.3f}".format(top1=top1))
 
     state = {"state_dict": model.state_dict()}
-    save_path = os.path.join(args.lip_save_dir, ckpt_name)
-    torch.save(state, save_path)
+    # save_path = os.path.join(args.lip_save_dir, ckpt_name)
+    torch.save(state, model_path)
 
     return top1.avg
 
@@ -146,6 +146,7 @@ def get_loader_by_data(
     label_true=None,
     add_data_all=None,
     add_label_all=None,
+    add_inter_index=None,
     shuffle=False,
 ):
     dataset = None
@@ -165,9 +166,9 @@ def get_loader_by_data(
         label_all_acc = np.mean(label == label_true)
         label_inter_acc = np.mean(inter_label == inter_label_true)
         print(
-            "lip acc: ",
+            "forget data lip acc: ",
             round(label_all_acc * 100, 2),
-            "alignment acc: ",
+            "forget data alignment acc: ",
             round(label_inter_acc * 100, 2),
         )
 
@@ -182,9 +183,9 @@ def get_loader_by_data(
         label_all_acc = np.mean(label == label_true)
         label_inter_acc = np.mean(inter_label == inter_label_true)
         print(
-            "lip acc: ",
+            "forget data lip acc: ",
             round(label_all_acc * 100, 2),
-            "alignment acc: ",
+            "forget data alignment acc: ",
             round(label_inter_acc * 100, 2),
         )
 
@@ -198,13 +199,17 @@ def get_loader_by_data(
         # add_label = add_label_all[knn_index]
 
         # add test data by random
-        add_data_len = len(add_label_all)
-        inter_sum = sum(inter_index)
-        add_num = max(min(inter_sum, add_data_len), add_data_len // 3)
-        add_num = max((inter_sum + add_num) // batch_size, 1) * batch_size - inter_sum
-        add_idx = np.random.choice(add_data_len, add_num)
-        add_data = add_data_all[add_idx]
-        add_label = add_label_all[add_idx]
+        # add_data_len = len(add_label_all)
+        # inter_sum = sum(inter_index)
+        # add_num = max(min(inter_sum, add_data_len), add_data_len // 3)
+        # add_num = max((inter_sum + add_num) // batch_size, 1) * batch_size - inter_sum
+        # add_idx = np.random.choice(add_data_len, add_num)
+        # add_data = add_data_all[add_idx]
+        # add_label = add_label_all[add_idx]
+
+        # add test data by unlearning and lipnet inter
+        add_data = add_data_all[add_inter_index]
+        add_label = add_label_all[add_inter_index]
 
         inter_data = np.concatenate((inter_data, add_data), axis=0)
         inter_label = np.concatenate((inter_label, add_label), axis=0)
@@ -274,7 +279,8 @@ def main():
 
         print(" forget_acc_all: %.2f" % (forget_acc_lip_all * 100))
     else:
-        lip_train(test_loader, model, "checkpoint.pth.tar", args)
+        save_path = os.path.join(args.lip_save_dir, 'checkpoint.pth.tar')
+        lip_train(test_loader, model, save_path, args)
 
 
 if __name__ == "__main__":
