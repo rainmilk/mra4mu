@@ -209,8 +209,11 @@ def main():
     test_preds = test(test_loader_unlearn, unlearn_model)
     forget_preds = test(forget_loader_unlearn, unlearn_model)
     # unlearn acc
-    # forget_acc_before = print_acc(test_preds, forget_preds)
+    print('=======================unlearn model acc============================')
+    forget_acc_before = print_acc(test_preds, forget_preds)
+
     # lip acc
+    print('=======================lipnet acc=================================')
     forget_acc_before = print_acc(lip_list_pred, lip_forget_pred)
 
     if args.finetune_unlearn:
@@ -248,7 +251,7 @@ def main():
                 args.batch_size,
                 args.dataset,
                 forget_data,
-                lip_forget_pred,
+                forget_preds,
                 inter_index,
                 label_true=forget_label,
                 fit_embedding=test_embeddings,
