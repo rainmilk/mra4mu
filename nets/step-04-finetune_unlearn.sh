@@ -73,7 +73,7 @@ run_task() {
     lip_save_dir="$LIPS_OUTPUT_DIR/$dataset"
     test_data_dir="$BASE_SAVE_DATA_DIR/$dataset"
     save_forget_dir="$LIPS_SAVE_DATA_DIR/${arch}/$dataset"
-    log_file="${arch}_${dataset}_${unlearn_method}.log"
+    log_file="./logs/${arch}_${dataset}_${unlearn_method}.log"
 
     CUDA_VISIBLE_DEVICES=$gpu nohup python -u ft_unlearn.py \
         --epoch 10 \
