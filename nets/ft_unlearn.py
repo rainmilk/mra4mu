@@ -111,12 +111,15 @@ class CustomDataset(Dataset):
         return self.data[index], self.label[index]
 
 
-def print_acc(test_preds, forget_preds):
+def get_acc(test_preds, forget_preds):
+    eval_results = {}
     test_label = np.load(os.path.join(args.test_data_dir, "test_label.npy"))
     test_acc_unlearn = np.mean(test_label == test_preds)
+    eval_results['test_acc'] = test_acc_unlearn
 
     forget_label = np.load(os.path.join(args.test_data_dir, "forget_label.npy"))
     forget_acc_unlearn = np.mean(forget_preds == forget_label)
+    eval_results['forget_acc'] = forget_acc_unlearn
 
     print("***********************************************************")
     print(
@@ -131,8 +134,10 @@ def print_acc(test_preds, forget_preds):
             forget_preds[cls_index] == forget_label[cls_index]
         )
         print("label: %s, forget_acc: %.2f" % (label, forget_acc_unlearn_cls * 100))
+        label_name = 'forget_label_%d' % label
+        eval_results[label_name] = forget_acc_unlearn_cls
 
-    return forget_acc_unlearn
+    return forget_acc_unlearn, eval_results
 
 
 def main():
@@ -200,7 +205,7 @@ def main():
         forget_loader_unlearn = copy.deepcopy(forget_loader)
 
     # lip forget predicts
-    test_embeddings, lip_list_pred = lip_test(test_loader, lip_model)
+    test_embeddings, lip_test_pred = lip_test(test_loader, lip_model)
     forget_embeddings, lip_forget_pred = lip_test(forget_loader, lip_model)
 
     print("Before fine-tune:")
@@ -210,11 +215,16 @@ def main():
     forget_preds = test(forget_loader_unlearn, unlearn_model)
     # unlearn acc
     print('=======================unlearn model acc============================')
-    forget_acc_before = print_acc(test_preds, forget_preds)
+    unlearn_acc_before, _ = get_acc(test_preds, forget_preds)
 
     # lip acc
     print('=======================lipnet acc=================================')
-    forget_acc_before = print_acc(lip_list_pred, lip_forget_pred)
+    forget_acc_before, lip_results_before = get_acc(lip_test_pred, lip_forget_pred)
+    # save lipnet acc before
+    eval_result_before = {}
+    eval_result_before['accuracy'] = lip_results_before
+    eval_path_before = os.path.join(args.save_dir, "lipnet_eval_result.pth.tar")
+    torch.save(eval_result_before, eval_path_before)
 
     if args.finetune_unlearn:
         print("Finetuning...")
@@ -232,7 +242,7 @@ def main():
             print("sum forget inter index: ", sum(inter_index))
 
             # test lip predicts & unlearn predict
-            test_inter_index = lip_list_pred == test_preds
+            test_inter_index = lip_test_pred == test_preds
             print("sum test inter index: ", sum(test_inter_index))
 
             # forget_inter_loader = get_loader_by_data(
@@ -278,10 +288,10 @@ def main():
             forget_embeddings, lip_forget_pred = lip_test(forget_loader, lip_model)
 
             # unlearn acc
-            # forget_acc = print_acc(test_preds, forget_preds)
+            # forget_acc, _ = get_acc(test_preds, forget_preds)
 
             # lipnet acc
-            forget_acc = print_acc(lip_test_pred, lip_forget_pred)
+            forget_acc, _ = get_acc(lip_test_pred, lip_forget_pred)
 
             if top_forget_acc >= forget_acc:
                 early_stop_num += 1
@@ -291,6 +301,13 @@ def main():
 
             if early_stop_num == 7:
                 break
+
+        # save lipnet acc
+        _, lip_results_ft = get_acc(lip_test_pred, lip_forget_pred)
+        eval_result_ft = {}
+        eval_result_ft['accuracy'] = lip_results_ft
+        eval_path_ft = os.path.join(args.save_dir, "lipnet_eval_result_ft.pth.tar")
+        torch.save(eval_result_ft, eval_path_ft)
 
 
 if __name__ == "__main__":
