@@ -214,6 +214,11 @@ def get_loader_by_data(
         inter_data = np.concatenate((inter_data, add_data), axis=0)
         inter_label = np.concatenate((inter_label, add_label), axis=0)
 
+        data_len = inter_label.shape[0]
+        data_len = data_len // batch_size * batch_size
+        inter_data = inter_data[:data_len]
+        inter_label = inter_label[:data_len]
+
         dataset = CustomDataset(inter_data, inter_label, dataset_name, one_channel)
 
     data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
