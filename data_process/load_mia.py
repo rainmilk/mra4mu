@@ -40,14 +40,15 @@ def get_mia(output_root, data_name, backbone_name, model_names, eval_result_file
 
 
 if __name__ == "__main__":
-    path = '../outputs'
+    # path = '../outputs'
+    path = '/nvme/szh/data/3ai/lips/outputs'
     unlearn_model_names = ['retrain', 'FT', 'FF', 'GA', 'IU', 'FT_prune']
     data_list = ['cifar10', 'cifar100', 'tinyimg', 'fmnist']
     backbones = ['resnet18', 'vgg16']
     eval_all = {}
 
-    # eval_file = 'eval_result.pth.tar'
-    eval_file = 'eval_result_ft.pth.tar'
+    eval_file = 'eval_result.pth.tar'
+    # eval_file = 'eval_result_ft.pth.tar'
     for data in data_list:
         for backbone in backbones:
             eval_result = get_mia(path, data, backbone, unlearn_model_names, eval_file)

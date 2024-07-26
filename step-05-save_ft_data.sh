@@ -1,0 +1,4 @@
+sh scripts/sh/save_eval_result_cifar10_ft_ailab.sh
+sh scripts/sh/save_eval_result_cifar100_ft_ailab.sh
+sh scripts/sh/save_eval_result_fmnist_ft_ailab.sh
+sh scripts/sh/save_eval_result_tinyimgnet_ft_ailab.sh
