@@ -3,7 +3,6 @@ import os
 import torch
 import pandas as pd
 
-
 def get_acc(output_root, data_name, backbone_name, model_names, eval_result_file):
     data_path = backbone_name + '_' + data_name
     output_path = os.path.join(output_root, data_path)
