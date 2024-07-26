@@ -29,12 +29,12 @@ def get_mia(output_root, data_name, backbone_name, model_names, eval_result_file
 
         eval_result = torch.load(eval_result_path)
         mia_efficacy = eval_result['SVC_MIA_forget_efficacy']
-        mia_result = [round(float(mia_efficacy['correctness'] * 100), 2),
-                      round(float(mia_efficacy['confidence'] * 100), 2),
-                      round(float(mia_efficacy['entropy'] * 100), 2),
-                      round(float(mia_efficacy['m_entropy'] * 100), 2),
-                      round(float(mia_efficacy['prob'] * 100), 2)]
-        eval_results.append(mia_result)
+        # mia_result = [round(float(mia_efficacy['correctness'] * 100), 2),
+        #               round(float(mia_efficacy['confidence'] * 100), 2),
+        #               round(float(mia_efficacy['entropy'] * 100), 2),
+        #               round(float(mia_efficacy['m_entropy'] * 100), 2),
+        #               round(float(mia_efficacy['prob'] * 100), 2)]
+        eval_results.append(mia_efficacy)
 
     return eval_results
 
