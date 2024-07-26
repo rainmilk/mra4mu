@@ -166,7 +166,7 @@ def get_loader_by_data(
         label_all_acc = np.mean(label == label_true)
         label_inter_acc = np.mean(inter_label == inter_label_true)
         print(
-            "forget data lip acc: ",
+            "forget data unlearn acc: ",
             round(label_all_acc * 100, 2),
             "forget data alignment acc: ",
             round(label_inter_acc * 100, 2),
@@ -174,6 +174,10 @@ def get_loader_by_data(
 
         dataset = CustomDataset(inter_data, inter_label, dataset_name, one_channel)
     elif loader_name == "inter_and":
+        # add random forget data from unlearn model
+        random_idx = np.random.choice(len(data), sum(inter_index)//10)
+        inter_index[random_idx] = True
+
         # inter data
         inter_data = data[inter_index]
         inter_label = label[inter_index]
@@ -183,7 +187,7 @@ def get_loader_by_data(
         label_all_acc = np.mean(label == label_true)
         label_inter_acc = np.mean(inter_label == inter_label_true)
         print(
-            "forget data lip acc: ",
+            "forget data unlearn acc: ",
             round(label_all_acc * 100, 2),
             "forget data alignment acc: ",
             round(label_inter_acc * 100, 2),
@@ -207,7 +211,7 @@ def get_loader_by_data(
         # add_data = add_data_all[add_idx]
         # add_label = add_label_all[add_idx]
 
-        # add test data by unlearning and lipnet inter
+        # add test data by unlearn and lipnet inter
         add_data = add_data_all[add_inter_index]
         add_label = add_label_all[add_inter_index]
 
