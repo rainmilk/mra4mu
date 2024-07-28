@@ -35,8 +35,8 @@ if __name__ == "__main__":
     backbones = ['resnet18', 'vgg16']
     eval_all = {}
 
-    eval_file = 'lipnet_eval_result.pth.tar'
-    # eval_file = 'lipnet_eval_result_ft.pth.tar'
+    # eval_file = 'lipnet_eval_result.pth.tar'
+    eval_file = 'lipnet_eval_result_ft.pth.tar'
 
     for data in data_list:
         for backbone in backbones:
