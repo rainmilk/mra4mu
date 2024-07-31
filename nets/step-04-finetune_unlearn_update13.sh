@@ -17,18 +17,32 @@ done
 # Define tasks and assign GPUs
 tasks=(
     "FT_prune cifar10 resnet18 0"
+
     "FT_prune cifar100 resnet18 1"
+
     "FF tinyimg resnet18 2"
+
     "FT_prune tinyimg resnet18 3"
+
     "IU fmnist resnet18 4"
+
     "FT_prune fmnist resnet18 5"
+    
     "IU cifar10 vgg16 6"
+
     "FT_prune cifar10 vgg16 7"
+
     "IU cifar100 vgg16 0"
+
     "FT_prune cifar100 vgg16 1"
+
     "IU tinyimg vgg16 2"
+    
     "FT_prune tinyimg vgg16 3"
+
     "FT_prune fmnist vgg16 4"
+    
+
 )
 
 # Function to run a task
