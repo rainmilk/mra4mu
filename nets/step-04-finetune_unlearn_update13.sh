@@ -18,17 +18,17 @@ done
 tasks=(
     "FT_prune cifar10 resnet18 0"
     "FT_prune cifar100 resnet18 1"
-    "fisher tinyimgnet resnet18 2"
-    "FT_prune tinyimgnet resnet18 3"
-    "wfisher fmnist resnet18 4"
+    "FF tinyimg resnet18 2"
+    "FT_prune tinyimg resnet18 3"
+    "IU fmnist resnet18 4"
     "FT_prune fmnist resnet18 5"
-    "wfisher cifar10 vgg16_bn_lth 6"
-    "FT_prune cifar10 vgg16_bn_lth 7"
-    "wfisher cifar100 vgg16_bn_lth 0"
-    "FT_prune cifar100 vgg16_bn_lth 1"
-    "wfisher tinyimgnet vgg16_bn_lth 2"
-    "FT_prune tinyimgnet vgg16_bn_lth 3"
-    "FT_prune fmnist vgg16_bn_lth 4"
+    "IU cifar10 vgg16 6"
+    "FT_prune cifar10 vgg16 7"
+    "IU cifar100 vgg16 0"
+    "FT_prune cifar100 vgg16 1"
+    "IU tinyimg vgg16 2"
+    "FT_prune tinyimg vgg16 3"
+    "FT_prune fmnist vgg16 4"
 )
 
 # Function to run a task
