@@ -328,12 +328,13 @@ def main():
             if early_stop_num == 7:
                 break
 
-        # save lipnet acc
-        _, lip_results_ft = get_acc(lip_test_pred, lip_forget_pred)
-        eval_result_ft = {}
-        eval_result_ft['accuracy'] = lip_results_ft
-        eval_path_ft = os.path.join(args.save_dir, "lipnet_eval_result_ft.pth.tar")
-        torch.save(eval_result_ft, eval_path_ft)
+        if not args.ft_um_only:
+            # save lipnet acc
+            _, lip_results_ft = get_acc(lip_test_pred, lip_forget_pred)
+            eval_result_ft = {}
+            eval_result_ft['accuracy'] = lip_results_ft
+            eval_path_ft = os.path.join(args.save_dir, "lipnet_eval_result_ft.pth.tar")
+            torch.save(eval_result_ft, eval_path_ft)
 
 
 if __name__ == "__main__":
