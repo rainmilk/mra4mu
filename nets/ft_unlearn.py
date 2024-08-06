@@ -219,12 +219,17 @@ def main():
 
     # lip acc
     print('=======================lipnet acc=================================')
-    forget_acc_before, lip_results_before = get_acc(lip_test_pred, lip_forget_pred)
+    lip_acc_before, lip_results_before = get_acc(lip_test_pred, lip_forget_pred)
     # save lipnet acc before
     eval_result_before = {}
     eval_result_before['accuracy'] = lip_results_before
     eval_path_before = os.path.join(args.save_dir, "lipnet_eval_result.pth.tar")
     torch.save(eval_result_before, eval_path_before)
+
+    if args.ft_um_only:
+        forget_acc_before = unlearn_acc_before
+    else:
+        forget_acc_before = lip_acc_before
 
     if args.finetune_unlearn:
         print("Finetuning...")
@@ -292,11 +297,13 @@ def main():
                     shuffle=True,
                 )
 
-            # train lip model
-            lip_train(forget_inter_add_test_loader_lip, lip_model, lip_ckpt_path_ft, args)
+            if not args.ft_um_only:
+                # train lip model
+                lip_train(forget_inter_add_test_loader_lip, lip_model, lip_ckpt_path_ft, args)
 
-            # train unlearn model
-            train(forget_inter_add_test_loader, unlearn_model, model_path_ft, args)
+            if not args.ft_uram_only:
+                # train unlearn model
+                train(forget_inter_add_test_loader, unlearn_model, model_path_ft, args)
 
             # print('-----------------after train-----------------------')
             test_preds = test(test_loader_unlearn, unlearn_model)
@@ -305,11 +312,12 @@ def main():
             test_embeddings, lip_test_pred = lip_test(test_loader, lip_model)
             forget_embeddings, lip_forget_pred = lip_test(forget_loader, lip_model)
 
-            # unlearn acc
-            # forget_acc, _ = get_acc(test_preds, forget_preds)
-
-            # lipnet acc
-            forget_acc, _ = get_acc(lip_test_pred, lip_forget_pred)
+            if args.ft_um_only:
+                # unlearn acc
+                forget_acc, _ = get_acc(test_preds, forget_preds)
+            else:
+                # lipnet acc
+                forget_acc, _ = get_acc(lip_test_pred, lip_forget_pred)
 
             if top_forget_acc >= forget_acc:
                 early_stop_num += 1

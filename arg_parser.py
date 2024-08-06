@@ -98,6 +98,19 @@ def parse_args():
         default=False,
         help="get eval result by finetune model",
     )
+    parser.add_argument(
+        "--ft_um_only",
+        action="store_true",
+        default=False,
+        help="only finetune unlearn model",
+    )
+
+    parser.add_argument(
+        "--ft_uram_only",
+        action="store_true",
+        default=False,
+        help="only finetune lipnet",
+    )
 
     parser.add_argument("--checkpoint", type=str, default=None, help="checkpoint file")
     parser.add_argument(
