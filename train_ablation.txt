@@ -1,0 +1,8 @@
+1. dp for uram
+就是 lipnet_acc before的数据
+
+2. lock um, only ft uram
+(1)原始脚本04, 每一条添加参数 --ft_uram_only
+(2) copy 之前的outputs一份, 删除 每个目录下_ft的ckpt
+  (例如，resnet18_cifar10/FT/ 目录下的FTcheckpoint_ft.pth.tar, FTeval_result_ft.pth.tar， lipnet_checkpoint_ft.pth.tar， lipnet_eval_result_ft.pth.tar)
+(3)执行04, 05脚本
