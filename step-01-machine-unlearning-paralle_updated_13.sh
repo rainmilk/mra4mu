@@ -26,7 +26,7 @@ run_training() {
         --unlearn_lr $unlearn_lr \
         --arch $arch \
         $additional_params \
-        > $log_file 2>&1 &
+        >$log_file 2>&1 &
 }
 
 # Training Dataset directories

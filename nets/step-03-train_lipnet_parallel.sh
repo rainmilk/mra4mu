@@ -40,9 +40,9 @@ run_task() {
     local dataset=$3
     local num_classes=$4
 
-    CUDA_VISIBLE_DEVICES=$gpu_id nohup python train.py --epoch 200 --data $BASE_SAVE_DATA_DIR --lip_save_dir $LIPS_OUTPUT_DIR/$arch/$dataset --test_data_dir $BASE_SAVE_DATA_DIR/$dataset --save_forget_dir $LIPS_SAVE_DATA_DIR/$arch/$dataset --num_classes $num_classes > $arch-$dataset-train.log 2>&1 &
+    CUDA_VISIBLE_DEVICES=$gpu_id nohup python train.py --epoch 200 --data $BASE_SAVE_DATA_DIR --lip_save_dir $LIPS_OUTPUT_DIR/$arch/$dataset --test_data_dir $BASE_SAVE_DATA_DIR/$dataset --save_forget_dir $LIPS_SAVE_DATA_DIR/$arch/$dataset --num_classes $num_classes >$arch-$dataset-train.log 2>&1 &
 
-    CUDA_VISIBLE_DEVICES=$gpu_id nohup python train.py --epoch 200 --data $BASE_SAVE_DATA_DIR --lip_save_dir $LIPS_OUTPUT_DIR/$arch/$dataset --test_data_dir $BASE_SAVE_DATA_DIR/$dataset --save_forget_dir $LIPS_SAVE_DATA_DIR/$arch/$dataset --num_classes $num_classes --resume_lipnet > $arch-$dataset-test.log 2>&1 &
+    CUDA_VISIBLE_DEVICES=$gpu_id nohup python train.py --epoch 200 --data $BASE_SAVE_DATA_DIR --lip_save_dir $LIPS_OUTPUT_DIR/$arch/$dataset --test_data_dir $BASE_SAVE_DATA_DIR/$dataset --save_forget_dir $LIPS_SAVE_DATA_DIR/$arch/$dataset --num_classes $num_classes --resume_lipnet >$arch-$dataset-test.log 2>&1 &
 }
 
 # Define tasks

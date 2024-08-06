@@ -2,7 +2,6 @@
 BASE_SAVE_DATA_DIR="/nvme/szh/data/3ai/lips/saved_data"
 LIPS_SAVE_DATA_DIR="/nvme/szh/data/3ai/lips/saved_data/lipnet"
 
-
 if [ ! -d "$BASE_SAVE_DATA_DIR" ]; then
     echo "Directory for saving MU data directory not found: $BASE_SAVE_DATA_DIR"
     exit 1

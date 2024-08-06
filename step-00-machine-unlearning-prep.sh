@@ -26,7 +26,7 @@ run_training() {
         --unlearn_lr $unlearn_lr \
         --arch $arch \
         $additional_params \
-        > $log_file 2>&1 &
+        >$log_file 2>&1 &
 }
 
 # Training Dataset directories
@@ -51,22 +51,17 @@ NUM_GPUS=${#GPUS[@]}
 run_training ${GPUS[GPU_INDEX % NUM_GPUS]} "$OUTPUT_BASE_DIR/resnet18_cifar10/finetune_backbone" retrain 0 1 100 0.1 resnet18 "" "$OUTPUT_LOG_DIR_TRAIN_BACKBONE/Resnet18-Cifar10-bbft.log"
 ((GPU_INDEX++))
 
-
-
 # 1.1.2 Resnet18 Cifar100
 run_training ${GPUS[GPU_INDEX % NUM_GPUS]} "$OUTPUT_BASE_DIR/resnet18_cifar100/finetune_backbone" retrain 0 1 100 0.1 resnet18 "--dataset cifar100" "$OUTPUT_LOG_DIR_TRAIN_BACKBONE/Resnet18-Cifar100-bbft.log"
 ((GPU_INDEX++))
-
 
 # 1.1.3 Resnet18 TinyImagenet
 run_training ${GPUS[GPU_INDEX % NUM_GPUS]} "$OUTPUT_BASE_DIR/resnet18_tinyimg/finetune_backbone" retrain 0 1 100 0.1 resnet18 "--dataset TinyImagenet --data_dir $TINYIMAGENET_DIR" "$OUTPUT_LOG_DIR_TRAIN_BACKBONE/Resnet18-tinyim-bbft.log"
 ((GPU_INDEX++))
 
-
 # 1.1.4 Resnet18 fashionMNIST
 run_training ${GPUS[GPU_INDEX % NUM_GPUS]} "$OUTPUT_BASE_DIR/resnet18_fmnist/finetune_backbone" retrain 0 1 100 0.1 resnet18 "--dataset fashionMNIST" "$OUTPUT_LOG_DIR_TRAIN_BACKBONE/Resnet18-fsmnist-bbft.log"
 ((GPU_INDEX++))
-
 
 # 1.2.1 vgg16_bn_lth Cifar10
 run_training ${GPUS[GPU_INDEX % NUM_GPUS]} "$OUTPUT_BASE_DIR/vgg16_cifar10/finetune_backbone" retrain 0 1 100 0.1 vgg16_bn_lth "" "$OUTPUT_LOG_DIR_TRAIN_BACKBONE/VGG16-Cifar10-bbft.log"
@@ -75,7 +70,6 @@ run_training ${GPUS[GPU_INDEX % NUM_GPUS]} "$OUTPUT_BASE_DIR/vgg16_cifar10/finet
 # 1.2.2 vgg16_bn_lth Cifar100
 run_training ${GPUS[GPU_INDEX % NUM_GPUS]} "$OUTPUT_BASE_DIR/vgg16_cifar100/finetune_backbone" retrain 0 1 100 0.1 vgg16_bn_lth "--dataset cifar100" "$OUTPUT_LOG_DIR_TRAIN_BACKBONE/VGG16-Cifar100-bbft.log"
 ((GPU_INDEX++))
-
 
 # 1.2.3 vgg16_bn_lth TinyImagenet
 run_training ${GPUS[GPU_INDEX % NUM_GPUS]} "$OUTPUT_BASE_DIR/vgg16_tinyimg/finetune_backbone" retrain 0 1 100 0.1 vgg16_bn_lth "--dataset TinyImagenet --data_dir $TINYIMAGENET_DIR" "$OUTPUT_LOG_DIR_TRAIN_BACKBONE/VGG16-tinyim-bbft.log"
