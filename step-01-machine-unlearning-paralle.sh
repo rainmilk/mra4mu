@@ -44,6 +44,14 @@ if [ ! -d "$TINYIMAGENET_DIR" ]; then
     exit 1
 fi
 
+if [ ! -d "$OUTPUT_BASE_DIR" ]; then
+    mkdir -p $OUTPUT_BASE_DIR
+fi
+
+if [ ! -d "$OUTPUT_LOG_DIR_TRAIN_MU" ]; then
+    mkdir -p $OUTPUT_LOG_DIR_TRAIN_MU
+fi
+
 # Index to keep track of GPU allocation
 GPU_INDEX=0
 NUM_GPUS=${#GPUS[@]}

@@ -9,7 +9,6 @@ fi
 
 # Directory for saving the training outputs like Models and Logs
 OUTPUT_BASE_DIR="/nvme/szh/data/3ai/lips/outputs"
-
 # Directory for saving machine unlearning results
 SAVE_DATA_BASE_DIR="/nvme/szh/data/3ai/lips/saved_data"
 
@@ -32,14 +31,14 @@ python -u main_forget.py --save_dir $OUTPUT_BASE_DIR/resnet18_tinyimg/FF --unlea
 
 python -u main_forget.py --save_dir $OUTPUT_BASE_DIR/resnet18_tinyimg/IU --unlearn wfisher --class_to_replace 1,51,101,151,198 --num_indexes_to_replace 250 --dataset TinyImagenet --data_dir $TINYIMAGENET_DIR --arch resnet18 --resume --save_data --save_data_path $SAVE_DATA_BASE_DIR/tinyimgnet/resnet18/IU --shuffle
 
-python -u main_forget.py --save_dir $OUTPUT_BASE_DIR/resnet18_tinyimg/FT_prune --unlearn FT_prune --class_to_replace 1,51,101,151,198 --num_indexes_to_replace 250  --dataset TinyImagenet --data_dir $TINYIMAGENET_DIR --arch resnet18 --resume --save_data --save_data_path $SAVE_DATA_BASE_DIR/tinyimgnet/resnet18/FT_prune --shuffle
+python -u main_forget.py --save_dir $OUTPUT_BASE_DIR/resnet18_tinyimg/FT_prune --unlearn FT_prune --class_to_replace 1,51,101,151,198 --num_indexes_to_replace 250 --dataset TinyImagenet --data_dir $TINYIMAGENET_DIR --arch resnet18 --resume --save_data --save_data_path $SAVE_DATA_BASE_DIR/tinyimgnet/resnet18/FT_prune --shuffle
 
-python -u main_forget.py --save_dir $OUTPUT_BASE_DIR/vgg16_tinyimg/retrain --unlearn retrain --class_to_replace 1,51,101,151,198 --num_indexes_to_replace 250 --arch vgg16_bn_lth  --dataset TinyImagenet --data_dir $TINYIMAGENET_DIR --resume --save_data --save_data_path $SAVE_DATA_BASE_DIR/tinyimgnet/vgg16/retrain --shuffle
+python -u main_forget.py --save_dir $OUTPUT_BASE_DIR/vgg16_tinyimg/retrain --unlearn retrain --class_to_replace 1,51,101,151,198 --num_indexes_to_replace 250 --arch vgg16_bn_lth --dataset TinyImagenet --data_dir $TINYIMAGENET_DIR --resume --save_data --save_data_path $SAVE_DATA_BASE_DIR/tinyimgnet/vgg16/retrain --shuffle
 
-python -u main_forget.py --save_dir $OUTPUT_BASE_DIR/vgg16_tinyimg/FT --unlearn FT --class_to_replace 1,51,101,151,198 --num_indexes_to_replace 250 --arch vgg16_bn_lth  --dataset TinyImagenet --data_dir $TINYIMAGENET_DIR --resume --save_data --save_data_path $SAVE_DATA_BASE_DIR/tinyimgnet/vgg16/FT --shuffle
+python -u main_forget.py --save_dir $OUTPUT_BASE_DIR/vgg16_tinyimg/FT --unlearn FT --class_to_replace 1,51,101,151,198 --num_indexes_to_replace 250 --arch vgg16_bn_lth --dataset TinyImagenet --data_dir $TINYIMAGENET_DIR --resume --save_data --save_data_path $SAVE_DATA_BASE_DIR/tinyimgnet/vgg16/FT --shuffle
 
-python -u main_forget.py --save_dir $OUTPUT_BASE_DIR/vgg16_tinyimg/GA --unlearn GA --class_to_replace 1,51,101,151,198 --num_indexes_to_replace 250 --arch vgg16_bn_lth  --dataset TinyImagenet --data_dir $TINYIMAGENET_DIR --resume --save_data --save_data_path $SAVE_DATA_BASE_DIR/tinyimgnet/vgg16/GA --shuffle
+python -u main_forget.py --save_dir $OUTPUT_BASE_DIR/vgg16_tinyimg/GA --unlearn GA --class_to_replace 1,51,101,151,198 --num_indexes_to_replace 250 --arch vgg16_bn_lth --dataset TinyImagenet --data_dir $TINYIMAGENET_DIR --resume --save_data --save_data_path $SAVE_DATA_BASE_DIR/tinyimgnet/vgg16/GA --shuffle
 
-python -u main_forget.py --save_dir $OUTPUT_BASE_DIR/vgg16_tinyimg/IU --unlearn wfisher --class_to_replace 1,51,101,151,198 --num_indexes_to_replace 250 --arch vgg16_bn_lth  --dataset TinyImagenet --data_dir $TINYIMAGENET_DIR --resume --save_data --save_data_path $SAVE_DATA_BASE_DIR/tinyimgnet/vgg16/IU --shuffle
+python -u main_forget.py --save_dir $OUTPUT_BASE_DIR/vgg16_tinyimg/IU --unlearn wfisher --class_to_replace 1,51,101,151,198 --num_indexes_to_replace 250 --arch vgg16_bn_lth --dataset TinyImagenet --data_dir $TINYIMAGENET_DIR --resume --save_data --save_data_path $SAVE_DATA_BASE_DIR/tinyimgnet/vgg16/IU --shuffle
 
-python -u main_forget.py --save_dir $OUTPUT_BASE_DIR/vgg16_tinyimg/FT_prune --unlearn FT_prune --class_to_replace 1,51,101,151,198 --num_indexes_to_replace 250 --arch vgg16_bn_lth  --dataset TinyImagenet --data_dir $TINYIMAGENET_DIR --resume --save_data --save_data_path $SAVE_DATA_BASE_DIR/tinyimgnet/vgg16/FT_prune --shuffle
+python -u main_forget.py --save_dir $OUTPUT_BASE_DIR/vgg16_tinyimg/FT_prune --unlearn FT_prune --class_to_replace 1,51,101,151,198 --num_indexes_to_replace 250 --arch vgg16_bn_lth --dataset TinyImagenet --data_dir $TINYIMAGENET_DIR --resume --save_data --save_data_path $SAVE_DATA_BASE_DIR/tinyimgnet/vgg16/FT_prune --shuffle
