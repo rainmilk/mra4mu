@@ -63,7 +63,7 @@ CUDA_VISIBLE_DEVICES=3 nohup python ft_unlearn.py --epoch 10 --unlearn_lr 0.001 
 CUDA_VISIBLE_DEVICES=4 nohup python ft_unlearn.py --epoch 10 --unlearn_lr 0.001 --save_dir $BASE_OUTPUT_DIR/resnet18_cifar100/GA --unlearn GA --lip_save_dir $LIPS_OUTPUT_DIR/cifar100 --test_data_dir $BASE_SAVE_DATA_DIR/cifar100 --save_forget_dir $LIPS_SAVE_DATA_DIR/resnet18/cifar100 --dataset cifar100 --num_classes 100 --finetune_unlearn --ft_uram_only > $LOG_DIR/resnet18_cifar100_GA.log 2>&1 &
 
 # # (4) FF
-CUDA_VISIBLE_DEVICES=5 nohup python ft_unlearn.py CUDA_VISIBLE_DEVICES=2 nohup python -u ft_unlearn.py --epoch 10 --unlearn_lr 0.001 --save_dir $BASE_OUTPUT_DIR/resnet18_cifar100/FF --unlearn fisher --lip_save_dir $LIPS_OUTPUT_DIR/cifar100 --test_data_dir $BASE_SAVE_DATA_DIR/cifar100 --save_forget_dir $LIPS_SAVE_DATA_DIR/resnet18/cifar100 --dataset cifar100 --num_classes 100 --finetune_unlearn --ft_uram_only > $LOG_DIR/resnet18_cifar100_FF.log 2>&1 &
+CUDA_VISIBLE_DEVICES=5 nohup python ft_unlearn.py  --epoch 10 --unlearn_lr 0.001 --save_dir $BASE_OUTPUT_DIR/resnet18_cifar100/FF --unlearn fisher --lip_save_dir $LIPS_OUTPUT_DIR/cifar100 --test_data_dir $BASE_SAVE_DATA_DIR/cifar100 --save_forget_dir $LIPS_SAVE_DATA_DIR/resnet18/cifar100 --dataset cifar100 --num_classes 100 --finetune_unlearn --ft_uram_only > $LOG_DIR/resnet18_cifar100_FF.log 2>&1 &
 
 # # (5) IU
 CUDA_VISIBLE_DEVICES=6 nohup python ft_unlearn.py --epoch 10 --unlearn_lr 0.001 --save_dir $BASE_OUTPUT_DIR/resnet18_cifar100/IU --unlearn wfisher --lip_save_dir $LIPS_OUTPUT_DIR/cifar100 --test_data_dir $BASE_SAVE_DATA_DIR/cifar100 --save_forget_dir $LIPS_SAVE_DATA_DIR/resnet18/cifar100 --dataset cifar100 --num_classes 100 --finetune_unlearn --ft_uram_only > $LOG_DIR/resnet18_cifar100_IU.log 2>&1 &
