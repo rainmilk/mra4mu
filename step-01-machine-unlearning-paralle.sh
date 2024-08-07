@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define the GPUs to be used
-GPUS=(0 1 2 3 4 5 6 7)
+GPUS=(1 2 3 4 5 6 7)
 
 # Function to execute a training task on a specific GPU
 run_training() {
@@ -36,7 +36,7 @@ TINYIMAGENET_DIR="$DATASETS_BASE_DIR/tiny-imagenet-200"
 # Directory for saving the training outputs like Models and Logs
 OUTPUT_BASE_DIR="/nvme/szh/data/3ai/lips/outputs"
 
-OUTPUT_LOG_DIR_TRAIN_MU="/nvme/szh/data/3ai/lips/outputs/mu-training-logs"
+OUTPUT_LOG_DIR_TRAIN_MU="/nvme/szh/data/3ai/lips/logs/step-01-machine-unlearning"
 
 # Check if the TinyImagenet data directory exists
 if [ ! -d "$TINYIMAGENET_DIR" ]; then
