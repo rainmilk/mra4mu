@@ -29,15 +29,15 @@ def get_acc(output_root, data_name, backbone_name, model_names, eval_result_file
 
 
 if __name__ == "__main__":
-    # path = '/nvme/szh/data/3ai/lips/08-07-before-ablation/outputs'
-    path = '/nvme/szh/data/3ai/lips/08-07-after-ablation/outputs'
+    path = '/nvme/szh/data/3ai/lips/08-07-before-ablation/outputs'
+    # path = '/nvme/szh/data/3ai/lips/08-07-after-ablation/outputs'
     unlearn_model_names = ['retrain', 'FT', 'FF', 'GA', 'IU', 'FT_prune']
     data_list = ['cifar10', 'cifar100', 'tinyimg', 'fmnist']
     backbones = ['resnet18', 'vgg16']
     eval_all = {}
 
-    # eval_file = 'lipnet_eval_result.pth.tar'
-    eval_file = 'lipnet_eval_result_ft.pth.tar'
+    eval_file = 'lipnet_eval_result.pth.tar'
+    # eval_file = 'lipnet_eval_result_ft.pth.tar'
 
     for data in data_list:
         for backbone in backbones:
