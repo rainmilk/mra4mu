@@ -34,24 +34,24 @@ fi
 
 # (1) resnet18 cifar10
 # train
-python train.py --epoch 200 --data $BASE_SAVE_DATA_DIR --lip_save_dir $LIPS_OUTPUT_DIR/resnet18/cifar10 --test_data_dir $BASE_SAVE_DATA_DIR/cifar10 --save_forget_dir $LIPS_SAVE_DATA_DIR/resnet18/cifar10 --num_classes 10
+CUDA_VISIBLE_DEVICES=1 python train.py --epoch 200 --data $BASE_SAVE_DATA_DIR --lip_save_dir $LIPS_OUTPUT_DIR/resnet18/cifar10 --test_data_dir $BASE_SAVE_DATA_DIR/cifar10 --save_forget_dir $LIPS_SAVE_DATA_DIR/resnet18/cifar10 --num_classes 10
 # test
-python train.py --epoch 200 --data $BASE_SAVE_DATA_DIR --lip_save_dir $LIPS_OUTPUT_DIR/resnet18/cifar10 --test_data_dir $BASE_SAVE_DATA_DIR/cifar10 --save_forget_dir $LIPS_SAVE_DATA_DIR/resnet18/cifar10 --num_classes 10 --resume_lipnet
+CUDA_VISIBLE_DEVICES=1 python train.py --epoch 200 --data $BASE_SAVE_DATA_DIR --lip_save_dir $LIPS_OUTPUT_DIR/resnet18/cifar10 --test_data_dir $BASE_SAVE_DATA_DIR/cifar10 --save_forget_dir $LIPS_SAVE_DATA_DIR/resnet18/cifar10 --num_classes 10 --resume_lipnet
 
 # (2) resnet18 cifar100
 # train
-python train.py --epoch 200 --lip_save_dir $LIPS_OUTPUT_DIR/resnet18/cifar100 --test_data_dir $BASE_SAVE_DATA_DIR/cifar100 --save_forget_dir $LIPS_SAVE_DATA_DIR/resnet18/cifar100 --dataset cifar100 --num_classes 100
+CUDA_VISIBLE_DEVICES=1 python train.py --epoch 200 --lip_save_dir $LIPS_OUTPUT_DIR/resnet18/cifar100 --test_data_dir $BASE_SAVE_DATA_DIR/cifar100 --save_forget_dir $LIPS_SAVE_DATA_DIR/resnet18/cifar100 --dataset cifar100 --num_classes 100
 # test
-python train.py --epoch 200 --lip_save_dir $LIPS_OUTPUT_DIR/resnet18/cifar100 --test_data_dir $BASE_SAVE_DATA_DIR/cifar100 --save_forget_dir $LIPS_SAVE_DATA_DIR/resnet18/cifar100 --dataset cifar100 --num_classes 100 --resume_lipnet
+CUDA_VISIBLE_DEVICES=1 python train.py --epoch 200 --lip_save_dir $LIPS_OUTPUT_DIR/resnet18/cifar100 --test_data_dir $BASE_SAVE_DATA_DIR/cifar100 --save_forget_dir $LIPS_SAVE_DATA_DIR/resnet18/cifar100 --dataset cifar100 --num_classes 100 --resume_lipnet
 
 # (3) resnet18 tinyimgnet
 # train
-python train.py --epoch 200 --lip_save_dir $LIPS_OUTPUT_DIR/resnet18/tinyimgnet --test_data_dir $BASE_SAVE_DATA_DIR/tinyimgnet --save_forget_dir $LIPS_SAVE_DATA_DIR/resnet18/tinyimgnet --dataset TinyImagenet --num_classes 200
+CUDA_VISIBLE_DEVICES=1 python train.py --epoch 200 --lip_save_dir $LIPS_OUTPUT_DIR/resnet18/tinyimgnet --test_data_dir $BASE_SAVE_DATA_DIR/tinyimgnet --save_forget_dir $LIPS_SAVE_DATA_DIR/resnet18/tinyimgnet --dataset TinyImagenet --num_classes 200
 # test
-python train.py --epoch 200 --lip_save_dir $LIPS_OUTPUT_DIR/resnet18/tinyimgnet --test_data_dir $BASE_SAVE_DATA_DIR/tinyimgnet --save_forget_dir $LIPS_SAVE_DATA_DIR/resnet18/tinyimgnet --dataset TinyImagenet --num_classes 200 --resume_lipnet
+CUDA_VISIBLE_DEVICES=1 python train.py --epoch 200 --lip_save_dir $LIPS_OUTPUT_DIR/resnet18/tinyimgnet --test_data_dir $BASE_SAVE_DATA_DIR/tinyimgnet --save_forget_dir $LIPS_SAVE_DATA_DIR/resnet18/tinyimgnet --dataset TinyImagenet --num_classes 200 --resume_lipnet
 
 # (4) resnet18 fMNIST
 # train
-python train.py --lip_save_dir $LIPS_OUTPUT_DIR/resnet18/fmnist --test_data_dir $BASE_SAVE_DATA_DIR/fmnist --save_forget_dir $LIPS_SAVE_DATA_DIR/resnet18/fmnist --dataset fashionMNIST --num_classes 10
+CUDA_VISIBLE_DEVICES=1 python train.py --lip_save_dir $LIPS_OUTPUT_DIR/resnet18/fmnist --test_data_dir $BASE_SAVE_DATA_DIR/fmnist --save_forget_dir $LIPS_SAVE_DATA_DIR/resnet18/fmnist --dataset fashionMNIST --num_classes 10
 # test
-python train.py --epoch 200 --lip_save_dir $LIPS_OUTPUT_DIR/resnet18/fmnist --test_data_dir $BASE_SAVE_DATA_DIR/fmnist --save_forget_dir $LIPS_SAVE_DATA_DIR/resnet18/fmnist --dataset fashionMNIST --num_classes 10 --resume_lipnet
+CUDA_VISIBLE_DEVICES=1 python train.py --epoch 200 --lip_save_dir $LIPS_OUTPUT_DIR/resnet18/fmnist --test_data_dir $BASE_SAVE_DATA_DIR/fmnist --save_forget_dir $LIPS_SAVE_DATA_DIR/resnet18/fmnist --dataset fashionMNIST --num_classes 10 --resume_lipnet
