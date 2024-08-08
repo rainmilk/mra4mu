@@ -14,13 +14,13 @@ LOG_DIR="$LOG_BASE_DIR/$STEP"
 
 # Check If All Dirs Exist, if not, mkdir -p
 
-DIRS_TO_CHECK=($LIPS_OUTPUT_DIR $LIPS_SAVE_DATA_DIR $LOG_BASE_DIR $LOG_DIR)
+# DIRS_TO_CHECK=($LIPS_OUTPUT_DIR $LIPS_SAVE_DATA_DIR $LOG_BASE_DIR $LOG_DIR)
 
-for dir in ${DIRS_TO_CHECK[@]}; do
-    if [ ! -d $dir ]; then
-        mkdir -p $dir
-    fi
-done
+# for dir in ${DIRS_TO_CHECK[@]}; do
+#     if [ ! -d $dir ]; then
+#         mkdir -p $dir
+#     fi
+# done
 
 echo "All directories exist, starting the training process..."
 
