@@ -14,7 +14,11 @@ def copy_backbone_ckpt(output_root, data_name, backbone_name, model_names):
         if backbone_name == 'vgg16' and model_name == 'FF':
             continue
         unlearn_path = os.path.join(output_path, model_name)
+        
+        os.makedirs(unlearn_path, exist_ok=True)
+        
         model_true_name = model_name
+        
         if model_name == 'FF':
             model_true_name = 'fisher'
         elif model_name == 'IU':
