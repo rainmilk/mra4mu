@@ -35,7 +35,8 @@ def get_acc(output_root, data_name, backbone_name, model_names, eval_result_file
 
 if __name__ == "__main__":
     # path = '../outputs'
-    path = '/nvme/szh/data/3ai/lips/08-07-after-ablation-2/outputs'
+    # path = '/nvme/szh/data/3ai/lips/08-07-after-ablation-2/outputs'
+    path = '/nvme/szh/data/3ai/lips/outputs'
     unlearn_model_names = ['retrain', 'FT', 'FF', 'GA', 'IU', 'FT_prune']
     data_list = ['cifar10', 'cifar100', 'tinyimg', 'fmnist']
     backbones = ['resnet18', 'vgg16']
@@ -51,5 +52,5 @@ if __name__ == "__main__":
 
     df_eval = pd.DataFrame.from_dict(eval_all)
     df_eval.index = unlearn_model_names
-    df_eval.to_csv('unlearn_acc_before2.csv')
+    df_eval.to_csv('unlearn_acc_before_0808-1320.csv')
     print('save acc done!')

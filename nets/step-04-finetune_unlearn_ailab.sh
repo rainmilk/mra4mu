@@ -9,7 +9,6 @@ fi
 
 if [ ! -d "$LIPS_SAVE_DATA_DIR" ]; then
     echo "Directory for saving lipschitz data directory not found: $LIPS_SAVE_DATA_DIR"
-    mkdir -p $LIPS_SAVE_DATA_DIR
     exit 1
 fi
 
