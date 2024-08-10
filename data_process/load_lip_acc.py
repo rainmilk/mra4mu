@@ -49,10 +49,10 @@ if __name__ == "__main__":
     eval_all = {}
 
     # Before fine tune
-    (eval_file, csv_file) = (eval_file_attack_before, csv_file_attack_before)
+    # (eval_file, csv_file) = (eval_file_attack_before, csv_file_attack_before)
 
     # After fine tune
-    # (eval_file, csv_file) = (eval_file_attack_after, csv_file_attack_after)
+    (eval_file, csv_file) = (eval_file_attack_after, csv_file_attack_after)
 
     for data in data_list:
         for backbone in backbones:
