@@ -1,0 +1,18 @@
+!!!!注意：
+(1) 用到2个outputs路径，执行前先把2个outputs备份，1-3步的save_dir 为outputs-after-step05, 第4步为outputs-after-step05-abl2
+(2) 修改 1-3步 --save_dir 为 outputs-after-step05, 第4步为 outputs-after-step05-abl2
+(3) cp -r saved_data saved_data_pred, 修改 1-4步的 --save_data_path 为 saved_data_pred
+(4) 顺序执行，查看控制台log，会打印出 forget acc，以及对应的load model 与 save路径。
+(5) 本地已经测试过了，执行非常迅速，每一步一两分钟，不需要并行，挨个执行查看控制台log check一下就可以。
+
+1. save_um_embedding_predict_before
+python save_predicts_embedding.py --save_dir ./outputs --load_before_or_after before --load_um_or_uram um --save_data_path ../saved_data
+
+2. save_uram_embedding_predict_before
+python save_predicts_embedding.py --save_dir ./outputs --load_before_or_after before --load_um_or_uram uram --save_data_path ../saved_data
+
+3. save_uram_embedding_predict_after
+python save_predicts_embedding.py --save_dir ./outputs --load_before_or_after after --load_um_or_uram uram --save_data_path ../saved_data
+
+4. save_uram_embedding_predict_after_abl2  (save_dir 改为 ./outputs-after-step05-abl2)
+python save_predicts_embedding.py --save_dir ./outputs --load_before_or_after after --load_um_or_uram uram --save_data_path ../saved_data
