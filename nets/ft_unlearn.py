@@ -16,7 +16,7 @@ sys.path.append(parent_dir)
 import utils
 
 import arg_parser
-from train import get_loader, SimpleLipNet, lip_train, lip_test, get_loader_by_data
+from nets.train import get_loader, SimpleLipNet, lip_train, lip_test, get_loader_by_data
 from models.VGG_LTH import vgg16_bn_lth
 
 

@@ -15,7 +15,7 @@ sys.path.append(parent_dir)
 
 import utils
 import arg_parser
-from lip import SimpleLipNet
+from nets.lip import SimpleLipNet
 
 
 def lip_train(train_loader, model, model_path, args):

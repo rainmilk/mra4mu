@@ -55,7 +55,8 @@ def parse_args():
         "--workers", type=int, default=4, help="number of workers in dataloader"
     )
     parser.add_argument("--resume", action="store_true", help="resume from checkpoint")
-    # todo
+
+    # ----------------------- todo add new argument--------------------------------------------------
     parser.add_argument(
         "--load_ff", action="store_true", help="load finetune model and unlearn train"
     )
@@ -111,6 +112,16 @@ def parse_args():
         default=False,
         help="only finetune lipnet",
     )
+
+    parser.add_argument(
+        "--load_um_or_uram", type=str, default="after", help="load um or uram model: um; uram"
+    )
+
+    parser.add_argument(
+        "--load_before_or_after", type=str, default="after", help="load um or uram model: before; after"
+    )
+
+    # --------------------------------------------------------------------------------------
 
     parser.add_argument("--checkpoint", type=str, default=None, help="checkpoint file")
     parser.add_argument(
