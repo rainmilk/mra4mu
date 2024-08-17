@@ -1,6 +1,7 @@
 """
     main process for a Lottery Tickets experiments
 """
+
 import argparse
 import os
 import pdb
@@ -79,8 +80,8 @@ def main():
     )
 
     if args.imagenet_arch:
-        lambda0 = (
-            lambda cur_iter: (cur_iter + 1) / args.warmup
+        lambda0 = lambda cur_iter: (
+            (cur_iter + 1) / args.warmup
             if cur_iter < args.warmup
             else (
                 0.5
@@ -259,8 +260,8 @@ def main():
             weight_decay=args.weight_decay,
         )
         if args.imagenet_arch:
-            lambda0 = (
-                lambda cur_iter: (cur_iter + 1) / args.warmup
+            lambda0 = lambda cur_iter: (
+                (cur_iter + 1) / args.warmup
                 if cur_iter < args.warmup
                 else (
                     0.5

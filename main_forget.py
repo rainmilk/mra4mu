@@ -137,7 +137,7 @@ def main():
             path = args.save_data_path
             save_data_dir = os.path.split(os.path.split(path)[0])[0]
             os.makedirs(save_data_dir, exist_ok=True)
-            test_data_path = os.path.join(save_data_dir, 'test_data.npy')
+            test_data_path = os.path.join(save_data_dir, "test_data.npy")
             if not os.path.exists(test_data_path):
                 if args.dataset == "TinyImagenet":
                     test_data = test_loader.dataset.imgs
@@ -147,9 +147,15 @@ def main():
                     forget_data = forget_dataset.data
 
                 np.save(os.path.join(save_data_dir, "test_data.npy"), test_data)
-                np.save(os.path.join(save_data_dir, "test_label.npy"), test_loader.dataset.targets)
+                np.save(
+                    os.path.join(save_data_dir, "test_label.npy"),
+                    test_loader.dataset.targets,
+                )
                 np.save(os.path.join(save_data_dir, "forget_data.npy"), forget_data)
-                np.save(os.path.join(save_data_dir, "forget_label.npy"), forget_dataset.targets)
+                np.save(
+                    os.path.join(save_data_dir, "forget_label.npy"),
+                    forget_dataset.targets,
+                )
 
                 print("save test data label and forget data label done!")
         else:
@@ -206,7 +212,7 @@ def main():
 
     if args.resume:
         if args.eval_result_ft:
-            ckpt_file = 'checkpoint_ft.pth.tar'
+            ckpt_file = "checkpoint_ft.pth.tar"
             checkpoint = unlearn.load_unlearn_checkpoint(model, device, args, ckpt_file)
         else:
             checkpoint = unlearn.load_unlearn_checkpoint(model, device, args)
@@ -251,7 +257,7 @@ def main():
         accuracy = get_accuracy()
         evaluation_result["accuracy"] = accuracy
         if args.eval_result_ft:
-            ft_file = 'eval_result_ft.pth.tar'
+            ft_file = "eval_result_ft.pth.tar"
             unlearn.save_unlearn_checkpoint(model, evaluation_result, args, ft_file)
         else:
             unlearn.save_unlearn_checkpoint(model, evaluation_result, args)
@@ -301,7 +307,7 @@ def main():
             model=model,
         )
         if args.eval_result_ft:
-            ft_file = 'eval_result_ft.pth.tar'
+            ft_file = "eval_result_ft.pth.tar"
             unlearn.save_unlearn_checkpoint(model, evaluation_result, args, ft_file)
         else:
             unlearn.save_unlearn_checkpoint(model, evaluation_result, args)

@@ -114,11 +114,17 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--load_um_or_uram", type=str, default="after", help="load um or uram model: um; uram"
+        "--load_um_or_uram",
+        type=str,
+        default="after",
+        help="load um or uram model: um; uram",
     )
 
     parser.add_argument(
-        "--load_before_or_after", type=str, default="after", help="load um or uram model: before; after"
+        "--load_before_or_after",
+        type=str,
+        default="after",
+        help="load um or uram model: before; after",
     )
 
     # --------------------------------------------------------------------------------------

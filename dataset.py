@@ -4,6 +4,7 @@
         CIFAR-10
         CIFAR-100   
 """
+
 import copy
 import glob
 import os
@@ -111,8 +112,12 @@ def fashionMNIST_dataloaders(
     print("10000 images for testing\t no normalize applied in data_transform")
     print("Data augmentation = randomcrop(28,4) + randomhorizontalflip")
 
-    train_set = FashionMNIST(data_dir, train=True, transform=train_transform, download=True)
-    test_set = FashionMNIST(data_dir, train=False, transform=test_transform, download=True)
+    train_set = FashionMNIST(
+        data_dir, train=True, transform=train_transform, download=True
+    )
+    test_set = FashionMNIST(
+        data_dir, train=False, transform=test_transform, download=True
+    )
 
     # train_set.data = train_set.data[..., np.newaxis].repeat(1, 1, 1, 3)
     # test_set.data = test_set.data[..., np.newaxis].repeat(1, 1, 1, 3)
@@ -157,20 +162,24 @@ def fashionMNIST_dataloaders(
         if num_indexes_to_replace is None or num_indexes_to_replace == 5400:
             # todo
             if len(class_to_replace) > 1:
-                class_replace_list = class_to_replace.split(',')
+                class_replace_list = class_to_replace.split(",")
                 class_replace_list = [int(data) for data in class_replace_list]
                 replace_idxes = []
                 for class_replace in class_replace_list:
                     replace_idx = np.where(test_set.targets == class_replace)[0]
                     replace_idxes.extend(replace_idx)
 
-                retrain_idx = [id for id in range(len(test_set)) if id not in replace_idxes]
+                retrain_idx = [
+                    id for id in range(len(test_set)) if id not in replace_idxes
+                ]
                 test_set.data = test_set.data[retrain_idx]
                 test_set.targets = test_set.targets[retrain_idx]
             else:
                 class_to_replace = int(class_to_replace)
                 test_set.data = test_set.data[test_set.targets != class_to_replace]
-                test_set.targets = test_set.targets[test_set.targets != class_to_replace]
+                test_set.targets = test_set.targets[
+                    test_set.targets != class_to_replace
+                ]
     if indexes_to_replace is not None:
         replace_indexes(
             dataset=train_set,
@@ -398,20 +407,24 @@ def cifar100_dataloaders(
         if num_indexes_to_replace is None or num_indexes_to_replace == 450:
             # todo
             if len(class_to_replace) > 1:
-                class_replace_list = class_to_replace.split(',')
+                class_replace_list = class_to_replace.split(",")
                 class_replace_list = [int(data) for data in class_replace_list]
                 replace_idxes = []
                 for class_replace in class_replace_list:
                     replace_idx = np.where(test_set.targets == class_replace)[0]
                     replace_idxes.extend(replace_idx)
 
-                retrain_idx = [id for id in range(len(test_set)) if id not in replace_idxes]
+                retrain_idx = [
+                    id for id in range(len(test_set)) if id not in replace_idxes
+                ]
                 test_set.data = test_set.data[retrain_idx]
                 test_set.targets = test_set.targets[retrain_idx]
             else:
                 class_to_replace = int(class_to_replace)
                 test_set.data = test_set.data[test_set.targets != class_to_replace]
-                test_set.targets = test_set.targets[test_set.targets != class_to_replace]
+                test_set.targets = test_set.targets[
+                    test_set.targets != class_to_replace
+                ]
     if indexes_to_replace is not None:
         replace_indexes(
             dataset=train_set,
@@ -639,14 +652,16 @@ class TinyImageNet:
                 # todo
                 test_set.targets = np.array(test_set.targets)
                 if len(class_to_replace) > 1:
-                    class_replace_list = class_to_replace.split(',')
+                    class_replace_list = class_to_replace.split(",")
                     class_replace_list = [int(data) for data in class_replace_list]
                     replace_idxes = []
                     for class_replace in class_replace_list:
                         replace_idx = np.where(test_set.targets == class_replace)[0]
                         replace_idxes.extend(replace_idx)
 
-                    retrain_idx = [id for id in range(len(test_set)) if id not in replace_idxes]
+                    retrain_idx = [
+                        id for id in range(len(test_set)) if id not in replace_idxes
+                    ]
                     test_set.imgs = test_set.imgs[retrain_idx]
                     test_set.targets = test_set.targets[retrain_idx]
                 else:
@@ -780,20 +795,24 @@ def cifar10_dataloaders(
         if num_indexes_to_replace is None or num_indexes_to_replace == 4500:
             # todo 效率低
             if len(class_to_replace) > 1:
-                class_replace_list = class_to_replace.split(',')
+                class_replace_list = class_to_replace.split(",")
                 class_replace_list = [int(data) for data in class_replace_list]
                 replace_idxes = []
                 for class_replace in class_replace_list:
                     replace_idx = np.where(test_set.targets == class_replace)[0]
                     replace_idxes.extend(replace_idx)
 
-                retrain_idx = [id for id in range(len(test_set)) if id not in replace_idxes]
+                retrain_idx = [
+                    id for id in range(len(test_set)) if id not in replace_idxes
+                ]
                 test_set.data = test_set.data[retrain_idx]
                 test_set.targets = test_set.targets[retrain_idx]
             else:
                 class_to_replace = int(class_to_replace)
                 test_set.data = test_set.data[test_set.targets != class_to_replace]
-                test_set.targets = test_set.targets[test_set.targets != class_to_replace]
+                test_set.targets = test_set.targets[
+                    test_set.targets != class_to_replace
+                ]
     if indexes_to_replace is not None:
         replace_indexes(
             dataset=train_set,
@@ -875,7 +894,7 @@ def replace_class(
                 indexes = np.flatnonzero(np.ones_like(dataset._labels))
     # todo add forget multiple classes 1 3 5
     elif len(class_to_replace) > 1:
-        class_replace_list = class_to_replace.split(',')
+        class_replace_list = class_to_replace.split(",")
         indexes_list = []
         for class_replace in class_replace_list:
             class_replace = int(class_replace)
@@ -898,7 +917,9 @@ def replace_class(
                 indexes = np.flatnonzero(np.array(dataset._labels) == class_to_replace)
 
     if num_indexes_to_replace is not None:
-        if isinstance(class_to_replace, int) or (len(class_to_replace) == 2 and int(class_to_replace) == -1):
+        if isinstance(class_to_replace, int) or (
+            len(class_to_replace) == 2 and int(class_to_replace) == -1
+        ):
             assert num_indexes_to_replace <= len(
                 indexes
             ), f"Want to replace {num_indexes_to_replace} indexes but only {len(indexes)} samples in dataset"
@@ -912,8 +933,9 @@ def replace_class(
             print(f"Replacing indexes {indexes}")
         else:
             indexes_len = len(indexes_list[0])
-            assert num_indexes_to_replace <= indexes_len, \
-                f"Want to replace {num_indexes_to_replace} indexes but only {indexes_len} samples in dataset"
+            assert (
+                num_indexes_to_replace <= indexes_len
+            ), f"Want to replace {num_indexes_to_replace} indexes but only {indexes_len} samples in dataset"
 
             r_indexes = []
             for indexes in indexes_list:
