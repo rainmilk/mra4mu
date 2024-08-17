@@ -115,11 +115,11 @@ def get_acc(test_preds, forget_preds):
     eval_results = {}
     test_label = np.load(os.path.join(args.test_data_dir, "test_label.npy"))
     test_acc_unlearn = np.mean(test_label == test_preds)
-    eval_results['test_acc'] = test_acc_unlearn
+    eval_results["test_acc"] = test_acc_unlearn
 
     forget_label = np.load(os.path.join(args.test_data_dir, "forget_label.npy"))
     forget_acc_unlearn = np.mean(forget_preds == forget_label)
-    eval_results['forget_acc'] = forget_acc_unlearn
+    eval_results["forget_acc"] = forget_acc_unlearn
 
     print("***********************************************************")
     print(
@@ -134,7 +134,7 @@ def get_acc(test_preds, forget_preds):
             forget_preds[cls_index] == forget_label[cls_index]
         )
         print("label: %s, forget_acc: %.2f" % (label, forget_acc_unlearn_cls * 100))
-        label_name = 'forget_label_%d' % label
+        label_name = "forget_label_%d" % label
         eval_results[label_name] = forget_acc_unlearn_cls
 
     return forget_acc_unlearn, eval_results
@@ -214,15 +214,15 @@ def main():
     test_preds = test(test_loader_unlearn, unlearn_model)
     forget_preds = test(forget_loader_unlearn, unlearn_model)
     # unlearn acc
-    print('=======================unlearn model acc============================')
+    print("=======================unlearn model acc============================")
     unlearn_acc_before, _ = get_acc(test_preds, forget_preds)
 
     # lip acc
-    print('=======================lipnet acc=================================')
+    print("=======================lipnet acc=================================")
     lip_acc_before, lip_results_before = get_acc(lip_test_pred, lip_forget_pred)
     # save lipnet acc before
     eval_result_before = {}
-    eval_result_before['accuracy'] = lip_results_before
+    eval_result_before["accuracy"] = lip_results_before
     eval_path_before = os.path.join(args.save_dir, "lipnet_eval_result.pth.tar")
     torch.save(eval_result_before, eval_path_before)
 
@@ -299,7 +299,9 @@ def main():
 
             if not args.ft_um_only:
                 # train lip model
-                lip_train(forget_inter_add_test_loader_lip, lip_model, lip_ckpt_path_ft, args)
+                lip_train(
+                    forget_inter_add_test_loader_lip, lip_model, lip_ckpt_path_ft, args
+                )
 
             if not args.ft_uram_only:
                 # train unlearn model
@@ -332,7 +334,7 @@ def main():
             # save lipnet acc
             _, lip_results_ft = get_acc(lip_test_pred, lip_forget_pred)
             eval_result_ft = {}
-            eval_result_ft['accuracy'] = lip_results_ft
+            eval_result_ft["accuracy"] = lip_results_ft
             eval_path_ft = os.path.join(args.save_dir, "lipnet_eval_result_ft.pth.tar")
             torch.save(eval_result_ft, eval_path_ft)
 
