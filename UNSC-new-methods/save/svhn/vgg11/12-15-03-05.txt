@@ -1,0 +1,4 @@
+2024-12-15 03:05:48 - INFO - Running seed 2023
+2024-12-15 03:05:48 - INFO - Experiment dir: ./save/svhn/vgg11
+2024-12-15 03:05:48 - INFO - Unlearn class: None
+2024-12-15 03:05:48 - INFO - {'seeds': [2023, 2024, 2025], 'repeat': 3, 'num_epochs': 2, 'milestones': [60, 120, 160], 'model_name': 'vgg11', 'lr': 0.1, 'wd': 0.0005, 'momentum': 0.9, 'gamma': 0.2, 'warm': 1, 'dataset': 'svhn', 'batch_size': 512, 'num_workers': 8, 'patience': 30, 'agent': 'Base', 'device': 'cuda', 'retrain': True, 'unlearn_class': None, 'time_str': '12-15-03-05', 'exp_dir': './save/svhn/vgg11', 'n_channels': 3, 'num_classes': 10, 'seed': 2023}
