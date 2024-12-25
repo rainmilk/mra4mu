@@ -34,7 +34,9 @@ def get_case(forget_ratio=0.5, suffix=suffix_name):
 
 def get_ckpt_path(dataset, case, model, model_suffix, step=None, unique_name=None):
     """Generate and return model paths dynamically."""
-    path = os.path.join(root_dir, "ckpt", dataset, case)
+    path = os.path.join(root_dir, "ckpt", dataset)
+    if case is not None:
+        path = os.path.join(path, case)
     if step is not None and step >= 0:
         path = os.path.join(path, f"step_{step}")
     if unique_name is not None:

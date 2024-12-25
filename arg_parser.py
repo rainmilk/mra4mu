@@ -311,6 +311,13 @@ def parse_args():
     )
 
     parser.add_argument(
+        "--mixup_samples",
+        type=int,
+        default=5,
+        help="Number of mixup samples",
+    )
+
+    parser.add_argument(
         "--adapt_epochs",
         type=int,
         default=1,

@@ -27,10 +27,12 @@ def split_data(dataset_name, train_dataset, test_dataset, classes, forget_ratio=
     train_label_path = settings.get_dataset_path(dataset_name, rawcase, "train_label")
     test_data_path = settings.get_dataset_path(dataset_name, rawcase, "test_data")
     test_label_path = settings.get_dataset_path(dataset_name, rawcase, "test_label")
-    forget_data_path = settings.get_dataset_path(dataset_name, rawcase, "forget_data")
-    forget__label_path = settings.get_dataset_path(dataset_name, rawcase, "forget_label")
-    retain_data_path = settings.get_dataset_path(dataset_name, rawcase, "retain_data")
-    retain_label_path = settings.get_dataset_path(dataset_name, rawcase, "retain_label")
+
+    case = settings.get_case(forget_ratio)
+    forget_data_path = settings.get_dataset_path(dataset_name, case, "forget_data")
+    forget__label_path = settings.get_dataset_path(dataset_name, case, "forget_label")
+    retain_data_path = settings.get_dataset_path(dataset_name, case, "retain_data")
+    retain_label_path = settings.get_dataset_path(dataset_name, case, "retain_label")
 
     train_data, train_labels = zip(*train_dataset)
     train_data = torch.stack(train_data)
@@ -45,7 +47,7 @@ def split_data(dataset_name, train_dataset, test_dataset, classes, forget_ratio=
         classes, forget_ratio=forget_ratio
     )
 
-    subdir = os.path.dirname(train_data_path)
+    subdir = os.path.dirname(forget_data_path)
     os.makedirs(subdir, exist_ok=True)
 
     # 保存训练数据集

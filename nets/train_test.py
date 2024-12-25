@@ -93,8 +93,9 @@ def model_train(
 
 
 def model_test(data_loader, model, device="cuda"):
-    eval_results = {}
+    model.eval()
 
+    eval_results = {}
     predicts, probs, labels = model_forward(data_loader, model, device, output_targets=True)
 
     # global acc
@@ -115,9 +116,6 @@ def model_test(data_loader, model, device="cuda"):
 
 def model_forward(test_loader, model, device="cuda",
                           output_embedding=False, output_targets=False):
-    model.to(device)
-    model.eval()
-
     output_probs, output_predicts = [], []
     if output_embedding:
         embed_outs = []

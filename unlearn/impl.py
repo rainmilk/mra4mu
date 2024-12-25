@@ -9,7 +9,7 @@ import torch
 import pruner
 import utils
 from pruner import extract_mask, prune_model_custom, remove_prune
-from core_model.train_test import model_test
+from nets.train_test import model_test
 
 from configs import settings
 

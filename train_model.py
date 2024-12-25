@@ -92,7 +92,7 @@ def train_step(
     )
 
     model_path = settings.get_ckpt_path(
-        dataset_name, train_mode, model_name, train_mode)
+        dataset_name, None, model_name, train_mode)
 
     if uni_name is None:
         train_data = np.load(

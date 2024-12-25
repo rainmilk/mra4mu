@@ -155,18 +155,20 @@ def get_dataset_loader(
     if not isinstance(loader_name, (list, tuple)):
         loader_name = [loader_name]
 
+    if not isinstance(case, (list, tuple)):
+        case = [case] * len(loader_name)
+
+
     data = []
     labels = []
-    for ld_name in loader_name:
-        if data_name is None:
-            data_name = f"{ld_name}_data"
+    for ld_name, case_name in zip(loader_name, case):
+        data_name = f"{ld_name}_data"
         data_path = settings.get_dataset_path(
-            dataset_name, case, data_name, step
+            dataset_name, case_name, data_name, step
         )
-        if label_name is None:
-            label_name = f"{ld_name}_label"
+        label_name = f"{ld_name}_label"
         label_path = settings.get_dataset_path(
-            dataset_name, case, label_name, step
+            dataset_name, case_name, label_name, step
         )
 
         print(f"Loading {data_path}")

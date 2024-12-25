@@ -53,7 +53,7 @@ def main():
 
     load_model_path = settings.get_ckpt_path(
         args.dataset,
-        case,
+        None,
         args.model,
         model_suffix="train"
     )
@@ -62,7 +62,7 @@ def main():
         args.dataset,
         case,
         args.model,
-        model_suffix="restore",
+        model_suffix="ul",
         unique_name=uni_name,
     )
 
