@@ -8,7 +8,6 @@ def parse_args():
     parser.add_argument(
         "--data", type=str, default="../data", help="location of the data corpus"
     )
-    parser.add_argument("--dataset", type=str, default="cifar10", help="dataset")
     parser.add_argument(
         "--input_size", type=int, default=32, help="size of input images"
     )
@@ -186,7 +185,7 @@ def parse_args():
         "--unlearn", type=str, default="retrain", help="method to unlearn"
     )
     parser.add_argument(
-        "--unlearn_lr", default=0.01, type=float, help="initial learning rate"
+        "--unlearn_lr", default=0.001, type=float, help="initial learning rate"
     )
     parser.add_argument(
         "--unlearn_epochs",
@@ -220,5 +219,148 @@ def parse_args():
         type=int,
         default=4,
         help="The size of trigger of backdoor attack",
+    )
+
+    ####################################################
+    parser.add_argument(
+        "--dataset",
+        type=str,
+        required=True,
+        default="cifar-10",
+        help="Dataset name, choose from: cifar-10, cifar-100, flower-102, tiny-imagenet-200, food-101",
+    )
+
+    parser.add_argument(
+        "--model",
+        type=str,
+        required=True,
+        help="models",
+    )
+
+    parser.add_argument(
+        "--no_spnorm",
+        action="store_true",
+        default=False,
+        help="If specified, no spectral norm",
+    )
+
+    parser.add_argument(
+        "--data_aug",
+        action="store_true",
+        default=False,
+        help="If specified, do data augmentation",
+    )
+
+    parser.add_argument(
+        "--train_mode",
+        type=str,
+        choices=["pretrain", "finetune", "train", "retain"],
+        help="Train mode",
+    )
+
+    parser.add_argument(
+        "--forget_ratio",
+        type=float,
+        default=0.5,
+        help="forget ratio",
+    )
+
+    # 添加 learning_rate 参数
+    parser.add_argument(
+        "--learning_rate",
+        type=float,
+        default=0.001,
+        help="Learning rate for the optimizer (default: 0.001)",
+    )
+
+    # 添加 optimizer 参数
+    parser.add_argument(
+        "--optimizer",
+        type=str,
+        choices=["sgd", "adam"],
+        default="adam",
+        help="Optimizer for training weights",
+    )
+
+    # 添加 num_epochs 参数
+    parser.add_argument(
+        "--num_epochs",
+        type=int,
+        default=5,
+        help="Number of epochs to train the model (default: 5)",
+    )
+
+    parser.add_argument(
+        "--distill_epochs",
+        type=int,
+        default=5,
+        help="Number of unlearning epochs",
+    )
+
+    parser.add_argument(
+        "--mixup_samples",
+        type=int,
+        default=3,
+        help="Number of mixup samples",
+    )
+
+    parser.add_argument(
+        "--align_epochs",
+        type=int,
+        default=3,
+        help="The number of epochs to adapt the model",
+    )
+
+    parser.add_argument(
+        "--lr_student",
+        type=float,
+        default=0.001,
+        help="Learning rate for the optimizer (default: 0.001)",
+    )
+
+    parser.add_argument(
+        "--ls_gamma",
+        type=float,
+        default=0.25,
+        help="Label smoothing factor",
+    )
+
+    parser.add_argument(
+        "--temperature",
+        type=float,
+        default=1,
+        help="Sharpen factor",
+    )
+
+    parser.add_argument(
+        "--top_conf",
+        type=float,
+        default=0.1,
+        help="Percentage of top confidence",
+    )
+
+    parser.add_argument(
+        "--mixup_alpha",
+        type=float,
+        default=0.75,
+        help="Mixup factor",
+    )
+
+    # 捕获其他 kwargs
+    parser.add_argument(
+        "--kwargs", nargs="*", help="Additional key=value arguments for hyperparameters"
+    )
+
+    parser.add_argument(
+        "--model_suffix",
+        type=str,
+        default=None,
+        help="Suffix to save model name",
+    )
+
+    parser.add_argument("--uni_name", type=str, default=None, help="Model unique name")
+
+    parser.add_argument(
+        "--use_tensorboard", action="store_true", help="Use TensorBoard for logging."
     )
     return parser.parse_args()

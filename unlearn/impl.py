@@ -9,6 +9,9 @@ import torch
 import pruner
 import utils
 from pruner import extract_mask, prune_model_custom, remove_prune
+from nets.train_test import model_test
+
+from configs import settings
 
 sys.path.append(".")
 from trainer import validate
@@ -59,6 +62,8 @@ def load_unlearn_checkpoint(model, device, args, filename="checkpoint.pth.tar"):
 
 def _iterative_unlearn_impl(unlearn_iter_func):
     def _wrapped(data_loaders, model, criterion, args):
+        test_loader = data_loaders["test"]
+        model_history = []
         decreasing_lr = list(map(int, args.decreasing_lr.split(",")))
         if args.rewind_epoch != 0:
             initialization = torch.load(
@@ -88,7 +93,7 @@ def _iterative_unlearn_impl(unlearn_iter_func):
                             np.pi
                             * (
                                 (cur_iter - args.warmup)
-                                / (args.unlearn_epochs - args.warmup)
+                                / (args.num_epochs - args.warmup)
                             )
                         )
                     )
@@ -102,13 +107,13 @@ def _iterative_unlearn_impl(unlearn_iter_func):
         if args.arch == "swin_t":
             optimizer = torch.optim.Adam(model.parameters(), args.unlearn_lr)
             scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-                optimizer, args.unlearn_epochs
+                optimizer, args.num_epochs
             )
         if args.rewind_epoch != 0:
             # learning rate rewinding
             for _ in range(args.rewind_epoch):
                 scheduler.step()
-        for epoch in range(0, args.unlearn_epochs):
+        for epoch in range(0, args.num_epochs):
             start_time = time.time()
             print(
                 "Epoch #{}, Learning rate: {}".format(
@@ -120,7 +125,13 @@ def _iterative_unlearn_impl(unlearn_iter_func):
             )
             scheduler.step()
 
+            if test_loader is not None:
+                eval_results = model_test(test_loader, model)
+                model_history.append(eval_results)
+
             print("one epoch duration:{}".format(time.time() - start_time))
+
+        return model_history
 
     return _wrapped
 
