@@ -2,4 +2,4 @@
 export PYTHONPATH=$(pwd)
 echo "PYTHONPATH is set to: $PYTHONPATH"
 
-python train_mode.py --dataset pet-37 --model resnet18 --train_mode train --num_epochs 3 --learning_rate 1e-4  --batch_size 64
+python train_model.py --dataset pet-37 --model resnet18 --train_mode train --num_epochs 3 --learning_rate 1e-4  --batch_size 64

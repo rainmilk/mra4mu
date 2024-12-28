@@ -70,8 +70,6 @@ def train_step(
     dataset_name = args.dataset
     num_classes = get_num_of_classes(dataset_name)
 
-    # 打印当前执行的参数
-    print(f"===== 执行步骤: {args.step} =====")
     print(f"数据集类型: {dataset_name}")
     print(
         f"Epochs: {args.num_epochs}, Batch Size: {args.batch_size}, Learning Rate: {args.learning_rate}"

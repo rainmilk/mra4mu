@@ -4,6 +4,7 @@ from torchvision import datasets, transforms
 from configs import settings
 from split_dataset import split_data
 import torchvision
+import numpy as np
 
 
 def create_dataset_files(
@@ -24,9 +25,11 @@ def create_dataset_files(
     test_dataset = datasets.Flowers102(
         root=data_dir, split="train", download=True, transform=data_transform
     )
-    split_data(
+    train_labels = split_data(
         dataset_name, train_dataset, test_dataset, forget_classes, forget_ratio
     )
+    results = np.unique(train_labels, return_index=True, return_counts=True)
+    print(results)
 
 def main():
     parser = argparse.ArgumentParser(
