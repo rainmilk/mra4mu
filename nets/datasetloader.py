@@ -90,6 +90,8 @@ class MixupDataset(Dataset):
         self.data_second = normalize_dataset(self.data_second, mean=mean, std=std)
         self.label_first = label_pair[0]
         self.label_second = label_pair[1]
+        self.nb_second = len(self.label_second)
+        self.second_idx = 0
         self.mixup_alpha = mixup_alpha
         self.transforms = transforms
         self.first_max = first_max
@@ -109,7 +111,8 @@ class MixupDataset(Dataset):
 
         data_first = self.data_first[index]
         label_first = self.label_first[index]
-        rnd_idx = np.random.randint(len(self.data_second))
+        rnd_idx = self.second_idx % self.nb_second
+        self.second_idx += 1
         data_rnd_ax = self.data_second[rnd_idx]
         label_rnd_ax = self.label_second[rnd_idx]
 
@@ -127,7 +130,8 @@ class NormalizeDataset(BaseTensorDataset):
                  channel_first=True, mean=None, std=None, device=None):
         super().__init__(data, labels, transforms, output_index)
         self.data = normalize_dataset(data, channel_first, mean, std)
-        if device is not None: self.data = torch.as_tensor(data, device=device)
+        self.data = torch.as_tensor(self.data)
+        if device is not None: self.data = self.data.to(device=device)
 
 
 def get_dataset_loader(

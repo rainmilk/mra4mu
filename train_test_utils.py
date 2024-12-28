@@ -7,7 +7,7 @@ import torch.nn as nn
 from torchvision import transforms
 from nets.optimizer import create_optimizer_scheduler
 import json
-from nets.dataset import BaseTensorDataset
+from nets.datasetloader import BaseTensorDataset
 
 from torch.utils.data import DataLoader
 

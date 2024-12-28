@@ -21,7 +21,6 @@ def model_train(
     test_per_it=1,
     loss_lambda=1.0
 ):
-    # todo opt 重置
     # 训练模型并显示进度
     print(f"Training model on {args.dataset}")
 
@@ -29,17 +28,16 @@ def model_train(
 
     if mix_classes > 0:
         alpha = 0.65
-        cutmix_transform = v2.CutMix(alpha=alpha, num_classes=mix_classes)
+        # cutmix_transform = v2.CutMix(alpha=alpha, num_classes=mix_classes)
         mixup_transform = v2.MixUp(alpha=alpha, num_classes=mix_classes)
 
-    for epoch in tqdm(range(epochs), desc="Training Progress"):
+    for epoch in range(epochs):
         running_loss = 0.0
         correct = 0
         total = 0
 
         # 更新学习率调度器
         model.train()
-        lr_scheduler.step(epoch)
         # 用 tqdm 显示训练进度条
         with tqdm(total=len(train_loader), desc=f"Epoch {epoch + 1} Training") as pbar:
             for i, (inputs, labels) in enumerate(train_loader):
@@ -73,6 +71,8 @@ def model_train(
                 # 更新进度条显示每个 mini-batch 的损失
                 pbar.set_postfix({"Loss": f"{loss.item():.4f}"})
                 pbar.update(1)
+
+        lr_scheduler.step(epoch)
 
         avg_loss = running_loss / len(train_loader)  # 计算平均损失
         accuracy = correct / total  # 计算训练集的准确率

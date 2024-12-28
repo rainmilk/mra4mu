@@ -185,7 +185,7 @@ def parse_args():
         "--unlearn", type=str, default="retrain", help="method to unlearn"
     )
     parser.add_argument(
-        "--unlearn_lr", default=0.01, type=float, help="initial learning rate"
+        "--unlearn_lr", default=0.001, type=float, help="initial learning rate"
     )
     parser.add_argument(
         "--unlearn_epochs",
@@ -227,13 +227,6 @@ def parse_args():
         type=str,
         required=True,
         default="cifar-10",
-        choices=[
-            "cifar-10",
-            "cifar-100",
-            "pet-37",
-            "flower-102",
-            "food-101",
-        ],
         help="Dataset name, choose from: cifar-10, cifar-100, flower-102, tiny-imagenet-200, food-101",
     )
 
@@ -259,16 +252,9 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--step",
-        type=int,
-        default=None,
-        help="Continual learning step",
-    )
-
-    parser.add_argument(
         "--train_mode",
         type=str,
-        choices=["pretrain", "finetune", "train"],
+        choices=["pretrain", "finetune", "train", "retain"],
         help="Train mode",
     )
 
@@ -282,6 +268,7 @@ def parse_args():
     # 添加 learning_rate 参数
     parser.add_argument(
         "--learning_rate",
+        type=float,
         default=0.001,
         help="Learning rate for the optimizer (default: 0.001)",
     )
@@ -299,36 +286,36 @@ def parse_args():
     parser.add_argument(
         "--num_epochs",
         type=int,
-        default=200,
-        help="Number of epochs to train the model (default: 200)",
+        default=5,
+        help="Number of epochs to train the model (default: 5)",
     )
 
     parser.add_argument(
-        "--warmup_epochs",
+        "--distill_epochs",
         type=int,
-        default=30,
+        default=5,
         help="Number of unlearning epochs",
     )
 
     parser.add_argument(
         "--mixup_samples",
         type=int,
-        default=5,
+        default=3,
         help="Number of mixup samples",
     )
 
     parser.add_argument(
-        "--adapt_epochs",
+        "--align_epochs",
         type=int,
-        default=1,
+        default=3,
         help="The number of epochs to adapt the model",
     )
 
     parser.add_argument(
-        "--lr_scale",
+        "--lr_student",
         type=float,
-        default=0.5,
-        help="Scale the working model lr",
+        default=0.001,
+        help="Learning rate for the optimizer (default: 0.001)",
     )
 
     parser.add_argument(
@@ -341,8 +328,15 @@ def parse_args():
     parser.add_argument(
         "--temperature",
         type=float,
-        default=0.75,
+        default=1,
         help="Sharpen factor",
+    )
+
+    parser.add_argument(
+        "--top_conf",
+        type=float,
+        default=0.1,
+        help="Percentage of top confidence",
     )
 
     parser.add_argument(

@@ -80,8 +80,6 @@ def train_step(
     model_name = args.model
     train_mode = args.train_mode
     
-    # case = settings.get_case(args.noise_ratio, args.noise_type)
-    
     uni_name = args.uni_name
 
     test_data = load_dataset(
@@ -91,15 +89,17 @@ def train_step(
         settings.get_dataset_path(dataset_name, None, "test_label"), is_data=False
     )
 
+    case = None if train_mode in ["train", "pretrain"] else settings.get_case(args.forget_ratio)
+
     model_path = settings.get_ckpt_path(
-        dataset_name, None, model_name, train_mode)
+        dataset_name, case, model_name, train_mode)
 
     if uni_name is None:
         train_data = np.load(
-            settings.get_dataset_path(dataset_name, None, f"{train_mode}_data")
+            settings.get_dataset_path(dataset_name, case, f"{train_mode}_data")
         )
         train_labels = np.load(
-            settings.get_dataset_path(dataset_name, None, f"{train_mode}_label")
+            settings.get_dataset_path(dataset_name, case, f"{train_mode}_label")
         )
 
         load_pretrained = True

@@ -1,15 +1,20 @@
 import os
+from functools import partial
+
 from torch import nn
 import torch
+import torch.nn.functional as F
 import time
 import numpy as np
+from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from datasetloader import get_dataset_loader
+from datasetloader import get_dataset_loader, MixupDataset, NormalizeDataset
 from optimizer import create_optimizer_scheduler
 from custom_model import load_custom_model, ClassifierWrapper
 from configs import settings
-from train_test import model_test
+from train_test import model_test, model_forward, model_train
+import torchvision.transforms as transforms
 
 import logging
 import utils
@@ -18,34 +23,50 @@ import arg_parser
 
 def sharpen(probs, temperature=1.0, axis=-1):
     probs = probs ** (1.0 / temperature)
-    return probs / torch.sum(probs, axis=-1, keepdims=True)
+    return probs / np.sum(probs, axis=-1, keepdims=True)
 
 
-def mixup_img(images, labels=None, nb_mixup=1, alpha=0.75, device='cpu'):
-    results_images = []
-    results_labels = []
+def label_smooth(labels, num_classes, gamma=0.0):
+    return np.diag(np.ones(num_classes) - gamma)[labels] + gamma / num_classes
 
+
+def auto_mixup(images, labels=None, alpha=0.75):
     nb_images = len(images)
+    beta_dist = torch.distributions.beta.Beta(alpha, alpha)
 
-    for i in range(nb_mixup):
-        beta_dist = torch.distributions.beta.Beta(alpha, alpha)
-        lbd = beta_dist.sample(sample_shape=(nb_images,1,1,1)).to(device)
-        idx = lbd < 0.5
-        lbd[idx] = 1 - lbd[idx]
-        perm_idx = torch.randperm(nb_images)
-        mixed_img = lbd * images + (1 - lbd) * images[perm_idx]
-        results_images.append(mixed_img)
-        if labels is not None:
-            mixed_labels = lbd * labels + (1 - lbd) * labels[perm_idx]
-            results_labels.append(mixed_labels)
+    lbd = beta_dist.sample(sample_shape=(nb_images,))
+    idx = lbd < 0.5
+    lbd[idx] = 1 - lbd[idx]
+    perm_idx = torch.randperm(nb_images)
+    lbd_img = lbd.reshape((-1, 1, 1, 1))
+    mixed_img = lbd_img * images + (1 - lbd_img) * images[perm_idx]
+    if labels is not None:
+        lbd_label = lbd.reshape((-1, 1))
+        mixed_labels = lbd_label * labels + (1 - lbd_label) * labels[perm_idx]
 
-    return results_images if labels is None else (results_images, results_labels)
+    return mixed_img if labels is None else (mixed_img, mixed_labels)
 
 
-def mixup(images1, labels1, images2, labels2, alpha=0.75, device='cpu'):
+def mixup_img(images1, images2, alpha=0.75):
+    nb_images = len(images1)
+
+    beta_dist = torch.distributions.beta.Beta(alpha, alpha)
+    lbd = beta_dist.sample(sample_shape=(nb_images,))
+    idx = lbd < 0.5
+    lbd[idx] = 1 - lbd[idx]
+    rnd_idx = torch.randint(low=0, high=len(images2), size=(nb_images,))
+    lbd_img = lbd.reshape((-1, 1, 1, 1))
+    mixed_img = lbd_img * images1 + (1 - lbd_img) * images2[rnd_idx]
+
+    return mixed_img
+
+
+def mixup(images1, labels1, images2, labels2, alpha=0.75):
     nb_images = len(images1)
     beta_dist = torch.distributions.beta.Beta(alpha, alpha)
-    lbd = beta_dist.sample(sample_shape=(nb_images,)).to(device=device)
+    lbd = beta_dist.sample(sample_shape=(nb_images,))
+    idx = lbd < 0.5
+    lbd[idx] = 1 - lbd[idx]
     rnd_idx = torch.randint(low=0, high=len(images2), size=(nb_images,))
     lbd_img = lbd.reshape((-1,1,1,1))
     mixed_img = lbd_img * images1 + (1 - lbd_img) * images2[rnd_idx]
@@ -53,6 +74,49 @@ def mixup(images1, labels1, images2, labels2, alpha=0.75, device='cpu'):
     mixied_label = lbd_label * labels1 + (1 - lbd_label) * labels2[rnd_idx]
 
     return mixed_img, mixied_label
+
+
+def mix_up_dataloader(
+    first_data,
+    first_probs,
+    second_data,
+    second_probs,
+    batch_size,
+    alpha=1.0,
+    transforms=None,
+    shuffle=True,
+    first_max=True
+):
+    mixed_dataset = MixupDataset(
+        data_pair=(first_data, second_data),
+        label_pair=(first_probs, second_probs),
+        mixup_alpha=alpha,
+        transforms=transforms,
+        first_max=first_max
+    )
+    return DataLoader(mixed_dataset, batch_size, drop_last=False, shuffle=shuffle)
+
+
+def model_distill(model_teacher, model_student, epoch, data_loader,
+                  transforms, criterion, optimizer, device, temperature=1):
+    with tqdm(total=len(data_loader), desc=f"Epoch {epoch + 1} Distillation") as pbar:
+        model_teacher.eval()
+        model_student.train()
+        for i, (image, target) in enumerate(data_loader):
+            # predictions on data augmentation
+            img_aug = transforms(image).to(device)
+            # image_mixup = auto_mixup(image, None, alpha=0.75, device=device)
+            pred_ul = model_teacher(img_aug)
+            pred_ul = F.softmax(pred_ul/temperature, dim=1)
+
+            pred_infer = model_student(img_aug)
+            loss = criterion(pred_infer, pred_ul)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            pbar.set_postfix({"Loss": f"{loss.item():.4f}"})
+            pbar.update(1)
 
 
 def mria_train(args):
@@ -66,11 +130,12 @@ def mria_train(args):
     log_path = os.path.join(log_path, "core_execution.log")
     logging.basicConfig(filename=log_path, level=logging.INFO)
 
-    learning_rate = getattr(args, "learning_rate", 0.001)
-    weight_decay = getattr(args, "weight_decay", 5e-4)
-    optimizer_type = getattr(args, "optimizer", "adam")
-    num_epochs = getattr(args, "num_epochs", 50)
-    uni_name = getattr(args, "uni_name", None)
+    learning_rate = args.learning_rate
+    lr_student = args.lr_student
+    weight_decay = args.weight_decay
+    optimizer_type = args.optimizer
+    num_epochs = args.num_epochs
+    uni_name = args.uni_name
 
     ul_model_path = settings.get_ckpt_path(
         args.dataset, case, args.model, model_suffix="ul", unique_name=uni_name,
@@ -80,13 +145,17 @@ def mria_train(args):
         args.dataset, case, args.model, model_suffix="restore", unique_name=uni_name,
     )
 
-    model_infer = load_custom_model(args.model, num_classes)
-    model_infer = ClassifierWrapper(model_infer, num_classes)
+    model_student_path = settings.get_ckpt_path(
+        args.dataset, case, args.model, model_suffix="student", unique_name=uni_name,
+    )
+
+    model_student = load_custom_model(args.model, num_classes)
+    model_student = ClassifierWrapper(model_student, num_classes)
     optimizer, lr_scheduler = create_optimizer_scheduler(
         optimizer_type,
-        model_infer.parameters(),
+        model_student.parameters(),
         num_epochs,
-        learning_rate,
+        lr_student,
         weight_decay,
     )
 
@@ -94,13 +163,35 @@ def mria_train(args):
     model_ul = ClassifierWrapper(backbone, num_classes)
     checkpoint = torch.load(ul_model_path)
     model_ul.load_state_dict(checkpoint, strict=False)
+    ul_optimizer, ul_lr_scheduler = create_optimizer_scheduler(
+        optimizer_type,
+        model_ul.parameters(),
+        num_epochs,
+        learning_rate,
+        weight_decay,
+    )
 
     model_ul.to(device=device)
-    model_infer.to(device=device)
+    model_student.to(device=device)
     # switch to train mode
-    model_ul.eval()
 
     loss_fn = nn.CrossEntropyLoss()
+
+    train_data, train_labels, train_loader = get_dataset_loader(
+        args.dataset,
+        ["test", "forget"],
+        [None, case],
+        batch_size=args.batch_size,
+        shuffle=False,
+    )
+
+    _, _, forget_loader = get_dataset_loader(
+        args.dataset,
+        "forget",
+        case,
+        batch_size=args.batch_size,
+        shuffle=False,
+    )
 
     _, _, data_loader = get_dataset_loader(
         args.dataset,
@@ -110,124 +201,79 @@ def mria_train(args):
         shuffle=True,
     )
 
-    _, _, forget_loader = get_dataset_loader(
-        args.dataset,
-        "forget",
-        case,
-        batch_size=args.batch_size,
-        shuffle=True,
-    )
+    model_test(forget_loader, model_ul, device)
+    auto_mix = partial(auto_mixup, labels=None, alpha=0.75)
+    temperature = args.temperature
 
-    softmax = nn.Softmax(dim=1)
+    for i in tqdm(range(num_epochs), desc="MRIA"):
+        # Distillation Stage
+        print(f"MRIA Epoch {i}: Distillation Stage")
+        for epoch in range(args.distill_epochs):
+            model_distill(model_ul, model_student, epoch, data_loader,
+                          auto_mix, loss_fn, optimizer, device, temperature)
+            model_test(forget_loader, model_student, device)
+            lr_scheduler.step(epoch)
 
-    # Warmup Stage
-    for epoch in tqdm(range(args.warmup_epochs), desc="Warmup Stage"):
-        with tqdm(total=len(data_loader), desc=f"Epoch {epoch + 1} Training") as pbar:
-            model_infer.train()
-            for i, (image, target) in enumerate(data_loader):
-                image = image.to(device)
 
-                # predictions on data augmentation
-                image_mixup = mixup_img(image, device=device)[0][0]
-                pred_ul = model_ul(image_mixup)
-                pred_ul = softmax(pred_ul)
-                pred_ul = sharpen(pred_ul, temperature=args.temperature)
+        # Alignment Stage
+        top_conf = args.top_conf
+        iters = 5
 
-                pred_infer = model_infer(image_mixup)
+        print(f"MRIA Epoch {i}: Alignment Stage")
+        model_teacher = model_ul
+        for _ in range(args.align_epochs):
+            train_predicts, train_probs = model_forward(train_loader, model_teacher)
+            infer_predicts, infer_probs = model_forward(train_loader, model_student)
+            nb_samples = len(train_predicts)
+            joint_probs = torch.as_tensor(train_probs * infer_probs)
+            k = round(top_conf * nb_samples / num_classes)
+            _, conf_topk = torch.topk(joint_probs, k=k, dim=0)
+            conf_topk = conf_topk.numpy().flatten()
+            # conf_idx = np.zeros(nb_samples, dtype=bool)
+            # conf_idx[conf_topk] = True
+            # conf_probs = infer_probs[conf_idx]
 
-                loss = loss_fn(pred_infer, pred_ul)
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
+            agree_labels = np.tile(np.arange(num_classes), k)
+            conf_data = train_data[conf_topk]
 
-                pbar.set_postfix({"Loss": f"{loss.item():.4f}"})
-                pbar.update(1)
+            # agree_labels = np.argmax(conf_probs, axis=-1)
+            conf_agree_probs = label_smooth(agree_labels, num_classes, gamma=args.ls_gamma)
+            conf_dataset = NormalizeDataset(conf_data, conf_agree_probs)
+            conf_data_loader = DataLoader(
+                conf_dataset, batch_size=args.batch_size, drop_last=False, shuffle=True
+            )
 
-        model_test(forget_loader, model_infer, device)
+            model_train(
+                conf_data_loader,
+                model_teacher,
+                ul_optimizer,
+                ul_lr_scheduler,
+                loss_fn,
+                iters,
+                args,
+                device=device,
+            )
+            model_test(forget_loader, model_teacher, device)
 
-    # Alignment Stage
-    nb_mixup = args.mixup_samples
+            model_train(
+                conf_data_loader,
+                model_student,
+                optimizer,
+                lr_scheduler,
+                loss_fn,
+                iters,
+                args,
+                device=device,
+            )
+            model_test(forget_loader, model_student, device)
 
-    for epoch in tqdm(range(args.epochs), desc="Alignment Stage"):
-        with tqdm(total=len(data_loader), desc=f"Epoch {epoch + 1} Training") as pbar:
-            for i, (image, target) in enumerate(data_loader):
-                image = image.cuda()
-                pred_ul_origin = model_ul(image)
-                pred_ul_origin = softmax(pred_ul_origin)
-                label_ul_origin = torch.argmax(pred_ul_origin, dim=-1)
-                pred_infer_origin = model_infer(image)
-                pred_infer_origin = softmax(pred_infer_origin)
-                label_infer_origin = torch.argmax(pred_infer_origin, dim=-1)
-
-                # predictions on data augmentation
-                image_mixup = mixup_img(image, nb_mixup=nb_mixup, device=device)
-                pred_list = []
-                # compute output
-                for im in image_mixup:
-                    pred_prob = model_ul(im)
-                    pred_prob = softmax(pred_prob)
-                    pred_list.append(pred_prob)
-
-                pred_augs = torch.stack(pred_list)
-                pred_aug_mean = torch.mean(pred_augs, dim=0)
-                label_pred_aug = torch.argmax(pred_aug_mean, dim=-1)
-
-                agree_idx = label_pred_aug == label_infer_origin
-                disagree_idx = ~agree_idx
-                nb_agree, nb_disagree = torch.count_nonzero(agree_idx), torch.count_nonzero(disagree_idx)
-
-                if nb_disagree > 0:
-                    image_disagree = image[disagree_idx]
-                    pred_disagree_mix = pred_infer_origin[disagree_idx]
-                    pred_disagree_mix = sharpen(pred_disagree_mix, temperature=args.temperature)
-
-                    if nb_agree > 0:
-                        image_agree = image[agree_idx]
-                        pred_agree_mix = (pred_infer_origin[agree_idx] + pred_ul_origin[agree_idx]) / 2
-                        pred_agree_mix = sharpen(pred_agree_mix, temperature=args.temperature)
-                    else:
-                        image_agree = image_disagree
-                        pred_agree_mix = pred_disagree_mix
-
-                    img_mix, label_mix = mixup(image_disagree, pred_disagree_mix,
-                                               image_agree, pred_agree_mix, args.temperature, device=device)
-
-                    pred_infer = model_infer(img_mix)
-                    loss = loss_fn(pred_infer, label_mix)
-                    optimizer.zero_grad()
-                    loss.backward()
-                    optimizer.step()
-
-                    pbar.set_postfix({"Loss": f"{loss.item():.4f}"})
-                    pbar.update(1)
-
-        model_test(forget_loader, model_infer, device)
-
-    state = {"state_dict": model_infer.state_dict()}
-    # save_path = os.path.join(args.lip_save_dir, ckpt_name)
+    state = {"state_dict": model_ul.state_dict()}
     torch.save(state, model_save_path)
 
-    return model_infer
+    state = {"state_dict": model_student.state_dict()}
+    torch.save(state, model_student_path)
 
-
-def mria_test(test_loader, model):
-    model.eval()
-    lip_outs, outputs = [], []
-
-    for i, (image, target) in enumerate(test_loader):
-        image = image.cuda()
-        # target = target.long().cuda()
-
-        # lipnet embedding out [batch, 512]
-        lip_out, output = model(image)
-
-        lip_outs.append(lip_out.data.cpu().numpy())
-        output = output.data.cpu().numpy()
-        output = np.argmax(output, axis=1)
-        outputs.append(output)
-
-    return np.concatenate(lip_outs, axis=0), np.concatenate(outputs, axis=0)
-
+    return model_ul, model_student
 
 
 if __name__ == "__main__":

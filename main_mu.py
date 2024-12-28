@@ -10,7 +10,7 @@ import numpy as np
 import arg_parser
 import unlearn
 
-from nets.dataset import get_dataset_loader
+from nets.datasetloader import get_dataset_loader
 from configs import settings
 from nets.custom_model import load_custom_model, ClassifierWrapper
 
@@ -40,13 +40,13 @@ def main():
         "forget",
         case,
         batch_size=args.batch_size,
-        shuffle=True,
+        shuffle=False,
     )
 
     _, _, test_loader = get_dataset_loader(
         args.dataset,
-        "test",
-        None,
+        "forget",
+        case,
         batch_size=args.batch_size,
         shuffle=False,
     )
