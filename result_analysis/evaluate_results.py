@@ -2,43 +2,55 @@ import argparse
 
 import torch
 import numpy as np
+
 from arg_parser import parse_args
 from configs import settings
 from nets.custom_model import ClassifierWrapper, load_custom_model
-from nets.dataset import get_dataset_loader
-from nets.train_test import model_forward
+from nets.datasetloader import get_dataset_loader
+from nets.train_test import model_forward, model_test
 
 
 def execute(args):
-    case = settings.get_case(args.noise_ratio, args.noise_type)
+    case = settings.get_case(args.forget_ratio)
     uni_names = args.uni_name
     uni_names = [uni_names] if uni_names is None else uni_names.split(",")
     num_classes = settings.num_classes_dict[args.dataset]
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     loaded_model = load_custom_model(args.model, num_classes, load_pretrained=False)
     model = ClassifierWrapper(loaded_model, num_classes)
+    model.to(device)
 
-    _, _, test_loader = get_dataset_loader(
+    _, _, pred_loader = get_dataset_loader(
         args.dataset,
-        "test",
-        None,
+        ["test", "forget"],
+        [None, case],
         batch_size=args.batch_size,
         shuffle=False,
     )
-    _, _, noisy_loader = get_dataset_loader(
+
+    # _, _, forget_cls_loader = get_dataset_loader(
+    #     args.dataset,
+    #     "forget_cls",
+    #     case,
+    #     batch_size=args.batch_size,
+    #     shuffle=False,
+    # )
+
+    _, _, forget_loader = get_dataset_loader(
         args.dataset,
-        "train_noisy",
+        "forget",
         case,
         batch_size=args.batch_size,
         shuffle=False,
-        label_name="train_noisy_true_label"
     )
 
     for uni_name in uni_names:
         print(f"Evaluating {uni_name}:")
+        model_case = None if args.model_suffix in ["train", "pretrain"] else settings.get_case(args.forget_ratio)
         model_ckpt_path = settings.get_ckpt_path(
             args.dataset,
-            case,
+            model_case,
             args.model,
             model_suffix=args.model_suffix,
             unique_name=uni_name,
@@ -46,18 +58,23 @@ def execute(args):
         print(f"Loading model from {model_ckpt_path}")
         checkpoint = torch.load(model_ckpt_path)
         model.load_state_dict(checkpoint, strict=False)
-        print(f"Evaluating test_data:")
-        results, embedding = model_test(test_loader, model)
+        model.eval()
+
+        print(f"Evaluating prediction dataset:")
+        results, embedding = evals(pred_loader, model, device, args)
         # print("Results: %.4f" % results)
         print("Results: ", results)
-        print(f"Evaluating train_noisy_data:")
-        n_results, n_embedding = model_test(noisy_loader, model)
+        print(f"Evaluating forget dataset:")
+        n_results, n_embedding = evals(forget_loader, model, device, args)
         # print("Results: %.4f" % results)
         print("Results: ", n_results)
+        # print(f"Evaluating forget class dataset:")
+        # n_results, n_embedding = evals(forget_cls_loader, model)
+        # # print("Results: %.4f" % results)
+        # print("Results: ", n_results)
 
 
-
-def model_test(data_loader, model, device="cuda"):
+def evals(data_loader, model, device="cuda", args=None):
     eval_results = {}
 
     predicts, probs, embedding, labels = model_forward(

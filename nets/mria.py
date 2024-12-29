@@ -229,9 +229,6 @@ def mria_train(args):
             k = round(top_conf * nb_samples / num_classes)
             _, conf_topk = torch.topk(joint_probs, k=k, dim=0)
             conf_topk = conf_topk.numpy().flatten()
-            # conf_idx = np.zeros(nb_samples, dtype=bool)
-            # conf_idx[conf_topk] = True
-            # conf_probs = infer_probs[conf_idx]
 
             agree_labels = np.tile(np.arange(num_classes), k)
             conf_data = train_data[conf_topk]
@@ -269,12 +266,12 @@ def mria_train(args):
 
     print("Teacher Model Performance:")
     model_test(train_loader, model_ul, device)
-    state = {"state_dict": model_ul.state_dict()}
+    state = model_ul.state_dict()
     torch.save(state, model_save_path)
 
     print("Student Model Performance:")
     model_test(train_loader, model_student, device)
-    state = {"state_dict": model_student.state_dict()}
+    state = model_student.state_dict()
     torch.save(state, model_student_path)
 
     return model_ul, model_student

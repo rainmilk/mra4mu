@@ -57,8 +57,8 @@ def split_data(dataset_name, train_dataset, test_dataset, classes, forget_ratio=
         classes, forget_ratio=forget_ratio
     )
 
-    forget_cls_data = np.concatenate([forget_cls_data, forget_data], axis=0)
-    forget_cls_labels = np.concatenate([forget_cls_labels, forget_labels], axis=0)
+    # forget_cls_data = np.concatenate([forget_cls_data, forget_data], axis=0)
+    # forget_cls_labels = np.concatenate([forget_cls_labels, forget_labels], axis=0)
 
 
     subdir = os.path.dirname(forget_data_path)
