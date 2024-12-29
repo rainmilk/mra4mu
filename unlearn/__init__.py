@@ -10,6 +10,8 @@ from .retrain_sam import retrain_sam
 from .Wfisher import Wfisher
 from .SAM import SAM
 
+from .BU import BU
+from .SalUn import SalUn
 
 def raw(data_loaders, model, criterion, args):
     pass
@@ -45,5 +47,9 @@ def get_unlearn_method(name):
         return retrain_ls
     elif name == "retrain_sam":
         return retrain_sam
+    elif name == "BU":
+        return BU
+    elif name == "SalUn":
+        return SalUn
     else:
         raise NotImplementedError(f"Unlearn method {name} not implemented!")
