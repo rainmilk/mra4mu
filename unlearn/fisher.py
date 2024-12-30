@@ -3,7 +3,7 @@ import copy
 import torch
 from torch.autograd import grad
 from tqdm import tqdm
-
+from nets.train_test import model_test
 
 def fisher_information_martix(model, train_dl, device):
     model.eval()
@@ -33,7 +33,7 @@ def fisher_information_martix(model, train_dl, device):
     return fisher_approximation
 
 
-def fisher(data_loaders, model, criterion, args):
+def fisher(data_loaders, model, criterion, args, mask=None):
     retain_loader = data_loaders["retain"]
 
     device = f"cuda:{int(args.gpu)}" if torch.cuda.is_available() else "cpu"
@@ -46,6 +46,9 @@ def fisher(data_loaders, model, criterion, args):
         noise = noise * args.alpha
         print(torch.max(noise))
         parameter.data = parameter.data + noise
+
+    model_test(forget_loader, model, device)
+
     return model
 
 
@@ -110,7 +113,7 @@ def get_mean_var(p, args, is_base_dist=False):
     return mu, var
 
 
-def fisher_new(data_loaders, model, criterion, args):
+def fisher_new(data_loaders, model, criterion, args, mask=None):
     retain_loader = data_loaders["retain"]
     dataset = retain_loader.dataset
     for p in model.parameters():
@@ -119,4 +122,7 @@ def fisher_new(data_loaders, model, criterion, args):
     for i, p in enumerate(model.parameters()):
         mu, var = get_mean_var(p, args, False)
         p.data = mu + var.sqrt() * torch.empty_like(p.data).normal_()
+
+    model_test(forget_loader, model, device)
+
     return model

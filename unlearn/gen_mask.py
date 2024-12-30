@@ -84,7 +84,7 @@ def save_gradient_ratio(unlearn_train_loader, model, criterion, args):
     threshold_dict = {}
 
     for i in threshold_list:
-        print(i)
+        # print(i)
         sorted_dict_positions = {}
         hard_dict = {}
 

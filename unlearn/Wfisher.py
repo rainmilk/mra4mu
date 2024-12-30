@@ -2,7 +2,7 @@ import torch
 from utils import get_x_y_from_data_dict
 from torch.autograd import grad
 from tqdm import tqdm
-
+from nets.train_test import model_test
 
 def get_require_grad_params(model: torch.nn.Module, named=False):
     if named:
@@ -195,5 +195,7 @@ def Wfisher(data_loaders, model, criterion, args, mask=None):
             mask=mask,
         )
     apply_perturb(model, args.alpha * perturb, args, mask=mask)
+
+    model_test(forget_loader, model, device)
 
     return model

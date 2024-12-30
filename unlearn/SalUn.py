@@ -17,7 +17,7 @@ def SalUn(data_loaders, model, criterion, optimizer, epoch, args, mask=None):
     #     save_gradient_ratio(unlearn_train_loader, model, criterion, args)
     #     flag = True
 
-    remain_class = np.setdiff1d(np.arange(args.num_classes), args.class_to_replace)
+    remain_class = np.setdiff1d(np.arange(args.num_classes, dtype=np.int64), args.class_to_replace)
 
     # threshold = 0.8
     # mask = torch.load(f'./save/{args.dataset}/mask_threshold_{threshold}.pt')
@@ -86,12 +86,12 @@ def SalUn(data_loaders, model, criterion, optimizer, epoch, args, mask=None):
 
             image = image.cuda()
             # target = target.cuda()
-            target = torch.from_numpy(np.random.choice(remain_class, size=image.shape[0])).cuda()
+            target = torch.as_tensor(np.random.choice(remain_class, size=image.shape[0])).cuda()
 
             # compute output
             output_clean = model(image)
             # loss = -args.alpha * criterion(output_clean, target)
-            loss = args.alpha * criterion(output_clean, target)
+            loss = criterion(output_clean, target)
 
             optimizer.zero_grad()
             loss.backward()

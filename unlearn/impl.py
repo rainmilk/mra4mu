@@ -86,7 +86,7 @@ def _iterative_unlearn_impl(unlearn_iter_func):
                             np.pi
                             * (
                                     (cur_iter - args.warmup)
-                                    / (args.unlearn_epochs - args.warmup)
+                                    / (args.num_epochs - args.warmup)
                             )
                         )
                         )
@@ -101,7 +101,7 @@ def _iterative_unlearn_impl(unlearn_iter_func):
             # learning rate rewinding
             for _ in range(args.rewind_epoch):
                 scheduler.step()
-        for epoch in range(0, args.unlearn_epochs):
+        for epoch in range(0, args.num_epochs):
             start_time = time.time()
 
             print(

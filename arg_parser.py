@@ -205,9 +205,17 @@ def parse_args():
         default=None,
         help="Number of data to forget",
     )
+    # parser.add_argument(
+    #     "--class_to_replace", type=str, default="", help="Specific class to forget"
+    # )
+
     parser.add_argument(
-        "--class_to_replace", type=str, default="", help="Specific class to forget"
+        "--class_to_replace",
+        nargs='+',
+        type=int,
+        help="class_to_replace",
     )
+
     parser.add_argument(
         "--indexes_to_replace",
         type=list,
