@@ -1,20 +1,13 @@
+from nets.train_test import model_test
 import os
-import sys
 import time
 
 import matplotlib.pyplot as plt
 import numpy as np
-import torch
-
 import pruner
+import torch
 import utils
 from pruner import extract_mask, prune_model_custom, remove_prune
-from nets.train_test import model_test
-
-from configs import settings
-
-sys.path.append(".")
-from trainer import validate
 
 
 def plot_training_curve(training_result, save_dir, prefix):
@@ -26,7 +19,7 @@ def plot_training_curve(training_result, save_dir, prefix):
     plt.close()
 
 
-def save_unlearn_checkpoint(model, evaluation_result, args, filename='eval_result.pth.tar'):
+def save_unlearn_checkpoint(model, evaluation_result, args):
     state = {"state_dict": model.state_dict(), "evaluation_result": evaluation_result}
     utils.save_checkpoint(state, False, args.save_dir, args.unlearn)
     utils.save_checkpoint(
@@ -34,35 +27,33 @@ def save_unlearn_checkpoint(model, evaluation_result, args, filename='eval_resul
         False,
         args.save_dir,
         args.unlearn,
-        filename=filename,
+        filename="eval_result.pth.tar",
     )
 
 
-def load_unlearn_checkpoint(model, device, args, filename="checkpoint.pth.tar"):
-    checkpoint = utils.load_checkpoint(device, args.save_dir, args.unlearn, filename)
+def load_unlearn_checkpoint(model, device, args):
+    checkpoint = utils.load_checkpoint(device, args.save_dir, args.unlearn)
     if checkpoint is None or checkpoint.get("state_dict") is None:
         return None
 
-    # todo 屏蔽，只需要加载模型
-    # current_mask = pruner.extract_mask(checkpoint["state_dict"])
-    # pruner.prune_model_custom(model, current_mask)
-    # pruner.check_sparsity(model)
+    current_mask = pruner.extract_mask(checkpoint["state_dict"])
+    pruner.prune_model_custom(model, current_mask)
+    pruner.check_sparsity(model)
 
-    model.load_state_dict(checkpoint["state_dict"], strict=False)
+    model.load_state_dict(checkpoint["state_dict"])
 
     # adding an extra forward process to enable the masks
-    # x_rand = torch.rand(1, 3, args.input_size, args.input_size).cuda()
-    # model.eval()
-    # with torch.no_grad():
-    #     model(x_rand)W
+    x_rand = torch.rand(1, 3, args.input_size, args.input_size).cuda()
+    model.eval()
+    with torch.no_grad():
+        model(x_rand)
 
     evaluation_result = checkpoint.get("evaluation_result")
     return model, evaluation_result
 
 
 def _iterative_unlearn_impl(unlearn_iter_func):
-    def _wrapped(data_loaders, model, criterion, args):
-        test_loader = data_loaders["test"]
+    def _wrapped(data_loaders, model, criterion, args, mask=None, **kwargs):
         model_history = []
         decreasing_lr = list(map(int, args.decreasing_lr.split(",")))
         if args.rewind_epoch != 0:
@@ -75,28 +66,30 @@ def _iterative_unlearn_impl(unlearn_iter_func):
             # rewind, initialization is a full model architecture without masks
             model.load_state_dict(initialization, strict=True)
             prune_model_custom(model, current_mask)
+
         optimizer = torch.optim.SGD(
             model.parameters(),
             args.unlearn_lr,
             momentum=args.momentum,
             weight_decay=args.weight_decay,
         )
+
         if args.imagenet_arch and args.unlearn == "retrain":
             lambda0 = (
                 lambda cur_iter: (cur_iter + 1) / args.warmup
                 if cur_iter < args.warmup
                 else (
-                    0.5
-                    * (
-                        1.0
-                        + np.cos(
+                        0.5
+                        * (
+                                1.0
+                                + np.cos(
                             np.pi
                             * (
-                                (cur_iter - args.warmup)
-                                / (args.num_epochs - args.warmup)
+                                    (cur_iter - args.warmup)
+                                    / (args.unlearn_epochs - args.warmup)
                             )
                         )
-                    )
+                        )
                 )
             )
             scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda0)
@@ -104,34 +97,30 @@ def _iterative_unlearn_impl(unlearn_iter_func):
             scheduler = torch.optim.lr_scheduler.MultiStepLR(
                 optimizer, milestones=decreasing_lr, gamma=0.1
             )  # 0.1 is fixed
-        if args.arch == "swin_t":
-            optimizer = torch.optim.Adam(model.parameters(), args.unlearn_lr)
-            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-                optimizer, args.num_epochs
-            )
         if args.rewind_epoch != 0:
             # learning rate rewinding
             for _ in range(args.rewind_epoch):
                 scheduler.step()
-        for epoch in range(0, args.num_epochs):
+        for epoch in range(0, args.unlearn_epochs):
             start_time = time.time()
+
             print(
                 "Epoch #{}, Learning rate: {}".format(
                     epoch, optimizer.state_dict()["param_groups"][0]["lr"]
                 )
             )
+
             train_acc = unlearn_iter_func(
-                data_loaders, model, criterion, optimizer, epoch, args
+                data_loaders, model, criterion, optimizer, epoch, args, **kwargs
             )
             scheduler.step()
 
+            test_loader = data_loaders["test"]
             if test_loader is not None:
                 eval_results = model_test(test_loader, model)
                 model_history.append(eval_results)
 
             print("one epoch duration:{}".format(time.time() - start_time))
-
-        return model_history
 
     return _wrapped
 

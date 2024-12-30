@@ -6,4 +6,6 @@ python main_mu.py --dataset cifar-10 --model efficientnet_s --forget_ratio 0.5 -
 
 python main_mu.py --dataset cifar-10 --model efficientnet_s --forget_ratio 0.5 --alpha 1 --unlearn_lr 4e-5 --uni_name FT --num_epochs 10  --batch_size 256
 
-python main_mu.py --dataset cifar-10 --model efficientnet_s --forget_ratio 0.5 --alpha 1 --unlearn_lr 4e-5 --uni_name FT --num_epochs 10  --batch_size 256
+python main_mu.py --dataset cifar-10 --model efficientnet_s --forget_ratio 0.5 --alpha 0.01 --unlearn_lr 4e-5 --uni_name FT_l1 --num_epochs 10  --batch_size 256
+
+# FT, RL, GA, IU, BU, L1, SalUn

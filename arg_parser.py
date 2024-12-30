@@ -55,6 +55,12 @@ def parse_args():
     )
     parser.add_argument("--resume", action="store_true", help="resume from checkpoint")
 
+    parser.add_argument("--mask_path", default=None, type=str, help="the path of saliency map")
+
+    parser.add_argument(
+        "--mask_ratio", type=float, default=0.5, help="mask ratio for unlearning"
+    )
+
     # ----------------------- todo add new argument--------------------------------------------------
     parser.add_argument(
         "--load_ff", action="store_true", help="load finetune model and unlearn train"

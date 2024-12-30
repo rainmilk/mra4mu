@@ -80,7 +80,7 @@ def GA(data_loaders, model, criterion, optimizer, epoch, args):
 
             # compute output
             output_clean = model(image)
-            loss = -args.alpha * criterion(output_clean, target)
+            loss = -criterion(output_clean, target)
 
             optimizer.zero_grad()
             loss.backward()

@@ -86,7 +86,11 @@ def main():
     model.load_state_dict(checkpoint, strict=False)
     model.to(device)
 
-    model_history = unlearn_method(unlearn_data_loaders, model, criterion, args)
+    mask = None
+    if args.mask_path:
+        mask = torch.load(args.mask_path)
+
+    model_history = unlearn_method(unlearn_data_loaders, model, criterion, args, mask)
 
     # save model
     os.makedirs(os.path.dirname(save_model_path), exist_ok=True)

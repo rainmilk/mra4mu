@@ -9,6 +9,8 @@ from .retrain_ls import retrain_ls
 from .retrain_sam import retrain_sam
 from .Wfisher import Wfisher
 from .SAM import SAM
+from .BU import boundary_shrink
+from .RL import RL
 
 
 def raw(data_loaders, model, criterion, args):
@@ -25,6 +27,8 @@ def get_unlearn_method(name):
         return GA
     elif name == "GA_l1":
         return GA_l1
+    elif name == "BU":
+        return boundary_shrink
     elif name == "FT":
         return FT
     elif name == "FT_l1":
@@ -33,7 +37,7 @@ def get_unlearn_method(name):
         return fisher
     elif name == "fisher_new":
         return fisher_new
-    elif name == "wfisher":
+    elif name == "IU":
         return Wfisher
     elif name == "FT_prune":
         return FT_prune
@@ -45,5 +49,9 @@ def get_unlearn_method(name):
         return retrain_ls
     elif name == "retrain_sam":
         return retrain_sam
+    elif name == "RL":
+        return RL
+    elif name == "SalUn":
+        return RL
     else:
         raise NotImplementedError(f"Unlearn method {name} not implemented!")

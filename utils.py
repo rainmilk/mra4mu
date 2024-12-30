@@ -258,3 +258,41 @@ def get_poisoned_loader(poison_loader, unpoison_loader, test_loader, poison_func
     )
 
     return poisoned_loader, unpoison_loader, poisoned_full_loader, poisoned_test_loader
+
+
+def replace_indexes(
+    dataset: torch.utils.data.Dataset, indexes, seed=0, only_mark: bool = False
+):
+    if not only_mark:
+        rng = np.random.RandomState(seed)
+        new_indexes = rng.choice(
+            list(set(range(len(dataset))) - set(indexes)), size=len(indexes)
+        )
+        dataset.data[indexes] = dataset.data[new_indexes]
+        dataset.labels[indexes] = dataset.labels[new_indexes]
+    else:
+        # Notice the -1 to make class 0 work
+        dataset.labels[indexes] = -dataset.labels[indexes] - 1
+
+
+def replace_class(
+    dataset: torch.utils.data.Dataset,
+    class_to_replace: int,
+    num_indexes_to_replace: int = None,
+    seed: int = 0,
+    only_mark: bool = False,
+):
+    if class_to_replace == -1:
+        indexes = np.flatnonzero(np.ones_like(dataset.labels))
+    else:
+        indexes = np.flatnonzero(np.array(dataset.labels) == class_to_replace)
+
+    if num_indexes_to_replace is not None:
+        assert num_indexes_to_replace <= len(
+            indexes
+        ), f"Want to replace {num_indexes_to_replace} indexes but only {len(indexes)} samples in dataset"
+        rng = np.random.RandomState(seed)
+        indexes = rng.choice(indexes, size=num_indexes_to_replace, replace=False)
+        print(f"Replacing indexes {indexes}")
+    replace_indexes(dataset, indexes, seed, only_mark)
+
