@@ -11,6 +11,7 @@ from .Wfisher import Wfisher
 from .SAM import SAM
 from .BU import boundary_shrink
 from .RL import RL
+from .SalUn import SalUn
 
 
 def raw(data_loaders, model, criterion, args):
@@ -52,6 +53,6 @@ def get_unlearn_method(name):
     elif name == "RL":
         return RL
     elif name == "SalUn":
-        return RL
+        return SalUn
     else:
         raise NotImplementedError(f"Unlearn method {name} not implemented!")

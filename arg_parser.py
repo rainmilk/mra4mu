@@ -55,7 +55,7 @@ def parse_args():
     )
     parser.add_argument("--resume", action="store_true", help="resume from checkpoint")
 
-    parser.add_argument("--mask_path", default=None, type=str, help="the path of saliency map")
+    parser.add_argument("--mask_thresh", default=0, type=float, help="the threshold of saliency map")
 
     parser.add_argument(
         "--mask_ratio", type=float, default=0.5, help="mask ratio for unlearning"

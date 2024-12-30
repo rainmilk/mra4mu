@@ -1,40 +1,72 @@
-
-import copy
-import os
-from collections import OrderedDict
-
-import arg_parser
 import torch
-import torch.nn as nn
 import torch.optim
 import torch.utils.data
-import unlearn
-import utils
+import numpy as np
 
 
-def save_gradient_ratio(data_loaders, model, criterion, args):
+def replace_indexes(
+    dataset: torch.utils.data.Dataset, indexes, seed=0, only_mark: bool = False
+):
+    if not only_mark:
+        rng = np.random.RandomState(seed)
+        new_indexes = rng.choice(
+            list(set(range(len(dataset))) - set(indexes)), size=len(indexes)
+        )
+        dataset.data[indexes] = dataset.data[new_indexes]
+        dataset.labels[indexes] = dataset.labels[new_indexes]
+    else:
+        # Notice the -1 to make class 0 work
+        dataset.labels[indexes] = -dataset.labels[indexes] - 1
+
+
+def replace_class(
+    dataset: torch.utils.data.Dataset,
+    class_to_replace: int,
+    num_indexes_to_replace: int = None,
+    seed: int = 0,
+    only_mark: bool = False,
+):
+    if class_to_replace == -1:
+        indexes = np.flatnonzero(np.ones_like(dataset.labels))
+    else:
+        indexes = np.flatnonzero(np.array(dataset.labels) == class_to_replace)
+
+    if num_indexes_to_replace is not None:
+        assert num_indexes_to_replace <= len(
+            indexes
+        ), f"Want to replace {num_indexes_to_replace} indexes but only {len(indexes)} samples in dataset"
+        rng = np.random.RandomState(seed)
+        indexes = rng.choice(indexes, size=num_indexes_to_replace, replace=False)
+        print(f"Replacing indexes {indexes}")
+    replace_indexes(dataset, indexes, seed, only_mark)
+
+
+def l1_regularization(model):
+    params_vec = []
+    for param in model.parameters():
+        params_vec.append(param.view(-1))
+    return torch.linalg.norm(torch.cat(params_vec), ord=1)
+
+# create saliency map
+def save_gradient_ratio(unlearn_train_loader, model, criterion, args):
     optimizer = torch.optim.SGD(
         model.parameters(),
         args.unlearn_lr,
         momentum=args.momentum,
         weight_decay=args.weight_decay,
     )
-
     gradients = {}
-
-    forget_loader = data_loaders["forget"]
     model.eval()
-
     for name, param in model.named_parameters():
         gradients[name] = 0
 
-    for i, (image, target) in enumerate(forget_loader):
+    for i, (image, target) in enumerate(unlearn_train_loader):
         image = image.cuda()
         target = target.cuda()
 
         # compute output
         output_clean = model(image)
-        loss = - criterion(output_clean, target)
+        loss = -criterion(output_clean, target)
 
         optimizer.zero_grad()
         loss.backward()
@@ -49,8 +81,10 @@ def save_gradient_ratio(data_loaders, model, criterion, args):
             gradients[name] = torch.abs_(gradients[name])
 
     threshold_list = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    threshold_dict = {}
 
     for i in threshold_list:
+        print(i)
         sorted_dict_positions = {}
         hard_dict = {}
 
@@ -80,73 +114,12 @@ def save_gradient_ratio(data_loaders, model, criterion, args):
             hard_dict[key] = threshold_tensor
             start_index += num_elements
 
-        return hard_dict
+        # save_path = f'./save/{args.dataset}/mask_threshold_{i}.pt'
+        # dir_path = os.path.dirname(save_path)
+        # os.makedirs(dir_path, exist_ok=True)
+        # torch.save(hard_dict, save_path)
+        # torch.save(hard_dict, f'./save/{args.dataset}/mask_threshold_{i}.pt')
+        threshold_dict[i] = hard_dict
 
+    return threshold_dict
 
-def mask(dataloader, model, args):
-    if torch.cuda.is_available():
-        device = torch.device("cuda")
-    else:
-        device = torch.device("cpu")
-
-    # prepare dataset
-    (
-        model,
-        train_loader_full,
-        val_loader,
-        test_loader,
-        marked_loader,
-    ) = utils.setup_model_dataset(args)
-    model.cuda()
-
-    def replace_loader_dataset(
-        dataset, batch_size=args.batch_size, seed=1, shuffle=True
-    ):
-        utils.setup_seed(seed)
-        return torch.utils.data.DataLoader(
-            dataset,
-            batch_size=batch_size,
-            num_workers=0,
-            pin_memory=True,
-            shuffle=shuffle,
-        )
-
-    seed = 345
-    forget_dataset = copy.deepcopy(marked_loader.dataset)
-    marked = forget_dataset.targets < 0
-    forget_dataset.data = forget_dataset.data[marked]
-    forget_dataset.labels = -forget_dataset.labels[marked] - 1
-    forget_loader = replace_loader_dataset(
-        forget_dataset, seed=seed, shuffle=True
-    )
-    retain_dataset = copy.deepcopy(marked_loader.dataset)
-    marked = retain_dataset.targets >= 0
-    retain_dataset.data = retain_dataset.data[marked]
-    retain_dataset.labels = retain_dataset.labels[marked]
-    retain_loader = replace_loader_dataset(
-        retain_dataset, seed=seed, shuffle=True
-    )
-    assert len(forget_dataset) + len(retain_dataset) == len(
-        train_loader_full.dataset
-    )
-
-    print(f"number of retain dataset {len(retain_dataset)}")
-    print(f"number of forget dataset {len(forget_dataset)}")
-    unlearn_data_loaders = OrderedDict(
-        retain=retain_loader, forget=forget_loader, val=val_loader, test=test_loader
-    )
-
-    criterion = nn.CrossEntropyLoss()
-
-    if args.resume:
-        checkpoint = unlearn.load_unlearn_checkpoint(model, device, args)
-
-    if args.resume and checkpoint is not None:
-        model, evaluation_result = checkpoint
-    else:
-        checkpoint = torch.load(args.model_path, map_location=device)
-        if "state_dict" in checkpoint.keys():
-            checkpoint = checkpoint["state_dict"]
-            model.load_state_dict(checkpoint, strict=False)
-
-    return save_gradient_ratio(unlearn_data_loaders, model, criterion, args)

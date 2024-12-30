@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 import torch.optim
 import torch.utils.data
-import numpy as np
+from unlearn.gen_mask import save_gradient_ratio
 
 import arg_parser
 import unlearn
@@ -87,8 +87,16 @@ def main():
     model.to(device)
 
     mask = None
-    if args.mask_path:
-        mask = torch.load(args.mask_path)
+    if args.mask_thresh > 0:
+        _, _, train_loader = get_dataset_loader(
+            args.dataset,
+            "train",
+            None,
+            batch_size=args.batch_size,
+            shuffle=True,
+        )
+        mask = save_gradient_ratio(train_loader, model, criterion, args)
+        mask = mask[args.mask_thresh]
 
     model_history = unlearn_method(unlearn_data_loaders, model, criterion, args, mask)
 

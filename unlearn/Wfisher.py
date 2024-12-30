@@ -1,66 +1,50 @@
 import torch
+from utils import get_x_y_from_data_dict
 from torch.autograd import grad
 from tqdm import tqdm
 
-from utils import get_x_y_from_data_dict
+
+def get_require_grad_params(model: torch.nn.Module, named=False):
+    if named:
+        return [
+            (name, param)
+            for name, param in model.named_parameters()
+            if param.requires_grad
+        ]
+    else:
+        return [param for param in model.parameters() if param.requires_grad]
 
 
-def sam_grad(model, loss):
+def sam_grad(model, loss, args):
+    names = []
     params = []
-    for param in model.parameters():
+
+    for param in get_require_grad_params(model, named=False):
         params.append(param)
+
     sample_grad = grad(loss, params)
     sample_grad = [x.view(-1) for x in sample_grad]
+
     return torch.cat(sample_grad)
 
 
-def apply_perturb(model, v):
+def apply_perturb(model, v, args, mask=None):
     curr = 0
-    for param in model.parameters():
-        length = param.view(-1).shape[0]
-        param.view(-1).data += v[curr : curr + length].data
-        curr += length
 
-
-def woodfisher(model, train_dl, device, criterion, v):
-    model.eval()
-    k_vec = torch.clone(v)
-    N = len(train_dl)
-
-    for idx, (data, label) in enumerate(tqdm(train_dl)):
-        data = data.to(device)
-        label = label.to(device)
-        output = model(data)
-        loss = criterion(output, label)
-        sample_grad = sam_grad(model, loss)
-        if idx == 0:
-            o_vec = torch.clone(sample_grad)
-        else:
-            tmp = torch.dot(o_vec, sample_grad)
-            k_vec -= (torch.dot(k_vec, sample_grad) / (N + tmp)) * o_vec
-            o_vec -= (tmp / (N + tmp)) * o_vec
-    return k_vec
-
-
-def sam_grad(model, loss):
-    params = []
-    for param in model.parameters():
-        params.append(param)
-    sample_grad = grad(loss, params)
-    sample_grad = [x.view(-1) for x in sample_grad]
-    return torch.cat(sample_grad)
-
-
-def apply_perturb(model, v):
-    curr = 0
-    with torch.no_grad():
-        for param in model.parameters():
+    if mask:
+        for name, param in get_require_grad_params(model, named=True):
             length = param.view(-1).shape[0]
-            param += v[curr : curr + length].view(param.shape)
+            param.view(-1).data += v[curr : curr + length].data * mask[name].view(-1)
+            curr += length
+
+    else:
+        for param in get_require_grad_params(model, named=False):
+            length = param.view(-1).shape[0]
+            param.view(-1).data += v[curr : curr + length].data
             curr += length
 
 
-def woodfisher(model, train_dl, device, criterion, v):
+def woodfisher(model, train_dl, device, criterion, v, args, mask=None):
     model.eval()
     k_vec = torch.clone(v)
     N = 1000
@@ -70,8 +54,9 @@ def woodfisher(model, train_dl, device, criterion, v):
         data = data.to(device)
         label = label.to(device)
         output = model(data)
+
         loss = criterion(output, label)
-        sample_grad = sam_grad(model, loss)
+        sample_grad = sam_grad(model, loss, args)
         with torch.no_grad():
             if o_vec is None:
                 o_vec = torch.clone(sample_grad)
@@ -84,7 +69,7 @@ def woodfisher(model, train_dl, device, criterion, v):
     return k_vec
 
 
-def woodfisher_im(model, train_dl, device, criterion, v):
+def woodfisher_im(model, train_dl, device, criterion, v, args, mask=None):
     model.eval()
     k_vec = torch.clone(v)
     N = 300000
@@ -96,8 +81,9 @@ def woodfisher_im(model, train_dl, device, criterion, v):
         model.zero_grad()
         data, label = get_x_y_from_data_dict(data, device)
         output = model(data)
+
         loss = criterion(output, label)
-        sample_grad = sam_grad(model, loss)
+        sample_grad = sam_grad(model, loss, args)
         with torch.no_grad():
             if o_vec is None:
                 o_vec = torch.clone(sample_grad)
@@ -110,7 +96,7 @@ def woodfisher_im(model, train_dl, device, criterion, v):
     return k_vec
 
 
-def Wfisher(data_loaders, model, criterion, args):
+def Wfisher(data_loaders, model, criterion, args, mask=None):
     retain_loader = data_loaders["retain"]
     forget_loader = data_loaders["forget"]
     retain_grad_loader = torch.utils.data.DataLoader(
@@ -124,10 +110,13 @@ def Wfisher(data_loaders, model, criterion, args):
     )
     device = f"cuda:{int(args.gpu)}" if torch.cuda.is_available() else "cpu"
     params = []
-    for param in model.parameters():
+
+    for param in get_require_grad_params(model, named=False):
         params.append(param.view(-1))
+
     forget_grad = torch.zeros_like(torch.cat(params)).to(device)
     retain_grad = torch.zeros_like(torch.cat(params)).to(device)
+
     total = 0
     model.eval()
     if args.imagenet_arch:
@@ -138,20 +127,22 @@ def Wfisher(data_loaders, model, criterion, args):
             data = data.to(device)
             label = label.to(device)
             output = model(data)
+
             loss = criterion(output, label)
-            f_grad = sam_grad(model, loss) * real_num
+            f_grad = sam_grad(model, loss, args) * real_num
             forget_grad += f_grad
             total += real_num
         total_2 = 0
-        for i, data in enumerate(tqdm(retain_grad_loader)):
+        for i, data in enumerate(tqdm(forget_loader)):
             model.zero_grad()
             data, label = get_x_y_from_data_dict(data, device)
             real_num = data.shape[0]
             data = data.to(device)
             label = label.to(device)
             output = model(data)
+
             loss = criterion(output, label)
-            r_grad = sam_grad(model, loss) * real_num
+            r_grad = sam_grad(model, loss, args) * real_num
             retain_grad += r_grad
             total_2 += real_num
     else:
@@ -161,8 +152,9 @@ def Wfisher(data_loaders, model, criterion, args):
             data = data.to(device)
             label = label.to(device)
             output = model(data)
+
             loss = criterion(output, label)
-            f_grad = sam_grad(model, loss) * real_num
+            f_grad = sam_grad(model, loss, args) * real_num
             forget_grad += f_grad
             total += real_num
 
@@ -173,12 +165,15 @@ def Wfisher(data_loaders, model, criterion, args):
             data = data.to(device)
             label = label.to(device)
             output = model(data)
+
             loss = criterion(output, label)
-            r_grad = sam_grad(model, loss) * real_num
+            r_grad = sam_grad(model, loss, args) * real_num
             retain_grad += r_grad
             total_2 += real_num
+
     retain_grad *= total / ((total + total_2) * total_2)
     forget_grad /= total + total_2
+
     if args.imagenet_arch:
         perturb = woodfisher_im(
             model,
@@ -186,6 +181,8 @@ def Wfisher(data_loaders, model, criterion, args):
             device=device,
             criterion=criterion,
             v=forget_grad - retain_grad,
+            args=args,
+            mask=mask,
         )
     else:
         perturb = woodfisher(
@@ -194,7 +191,9 @@ def Wfisher(data_loaders, model, criterion, args):
             device=device,
             criterion=criterion,
             v=forget_grad - retain_grad,
+            args=args,
+            mask=mask,
         )
-    apply_perturb(model, args.alpha * perturb)
+    apply_perturb(model, args.alpha * perturb, args, mask=mask)
 
     return model

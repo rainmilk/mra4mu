@@ -20,7 +20,7 @@ def l1_regularization(model):
 
 
 @iterative_unlearn
-def GA(data_loaders, model, criterion, optimizer, epoch, args):
+def GA(data_loaders, model, criterion, optimizer, epoch, args, mask=None):
     train_loader = data_loaders["forget"]
     print(len(train_loader))
     losses = utils.AverageMeter()

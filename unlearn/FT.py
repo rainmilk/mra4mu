@@ -141,10 +141,10 @@ def FT_iter(data_loaders, model, criterion, optimizer, epoch, args, with_l1=Fals
 
 
 @iterative_unlearn
-def FT(data_loaders, model, criterion, optimizer, epoch, args):
+def FT(data_loaders, model, criterion, optimizer, epoch, args, mask=None):
     return FT_iter(data_loaders, model, criterion, optimizer, epoch, args)
 
 
 @iterative_unlearn
-def FT_l1(data_loaders, model, criterion, optimizer, epoch, args):
+def FT_l1(data_loaders, model, criterion, optimizer, epoch, args, mask=None):
     return FT_iter(data_loaders, model, criterion, optimizer, epoch, args, with_l1=True)

@@ -7,7 +7,7 @@ prune_step = 2
 
 
 @iterative_unlearn
-def FT_prune_bi(data_loaders, model, criterion, optimizer, epoch, args):
+def FT_prune_bi(data_loaders, model, criterion, optimizer, epoch, args, mask=None):
     # switch to train mode
     model.train()
 

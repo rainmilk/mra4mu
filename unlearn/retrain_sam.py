@@ -65,7 +65,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args, l1=False):
 
 
 @iterative_unlearn
-def retrain_sam(data_loaders, model, criterion, optimizer, epoch, args):
+def retrain_sam(data_loaders, model, criterion, optimizer, epoch, args, mask=None):
     base_optimizer = torch.optim.SGD
     # from SAM import SAM
 
