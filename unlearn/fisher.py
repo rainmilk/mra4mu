@@ -35,6 +35,7 @@ def fisher_information_martix(model, train_dl, device):
 
 def fisher(data_loaders, model, criterion, args, mask=None):
     retain_loader = data_loaders["retain"]
+    forget_loader = data_loaders["forget"]
 
     device = f"cuda:{int(args.gpu)}" if torch.cuda.is_available() else "cpu"
     fisher_approximation = fisher_information_martix(model, retain_loader, device)
@@ -115,6 +116,8 @@ def get_mean_var(p, args, is_base_dist=False):
 
 def fisher_new(data_loaders, model, criterion, args, mask=None):
     retain_loader = data_loaders["retain"]
+    forget_loader = data_loaders["forget"]
+
     dataset = retain_loader.dataset
     for p in model.parameters():
         p.data0 = copy.deepcopy(p.data.clone())
@@ -123,6 +126,7 @@ def fisher_new(data_loaders, model, criterion, args, mask=None):
         mu, var = get_mean_var(p, args, False)
         p.data = mu + var.sqrt() * torch.empty_like(p.data).normal_()
 
+    device = f"cuda:{int(args.gpu)}" if torch.cuda.is_available() else "cpu"
     model_test(forget_loader, model, device)
 
     return model
