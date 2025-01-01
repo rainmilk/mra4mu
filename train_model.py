@@ -118,7 +118,7 @@ def train_step(
             learning_rate=args.learning_rate,
             weight_decay=args.weight_decay,
             data_aug=args.data_aug,
-            dataset_name=args.dataset,
+            test_it=args.test_it,
             writer=writer,
         )
         subdir = os.path.dirname(model_path)

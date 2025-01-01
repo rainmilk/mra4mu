@@ -47,7 +47,7 @@ def apply_perturb(model, v, args, mask=None):
 def woodfisher(model, train_dl, device, criterion, v, args, mask=None):
     model.eval()
     k_vec = torch.clone(v)
-    N = 1000
+    N = args.WF_N
     o_vec = None
     for idx, (data, label) in enumerate(tqdm(train_dl)):
         model.zero_grad()

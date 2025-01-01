@@ -187,7 +187,7 @@ def train_model(
     learning_rate=0.001,
     weight_decay=5e-4,
     data_aug=False,
-    dataset_name=None,
+    test_it=1,
     writer=None,
 ):
     """
@@ -317,10 +317,11 @@ def train_model(
             writer.add_scalar("Train/Accuracy", accuracy * 100, epoch)
 
         # 测试集评估
-        test_accuracy, test_loss = test_model(
-            model, test_loader, criterion, device, epoch
-        )
-        test_accuracies.append(test_accuracy)
+        if (epoch + 1) % test_it == 0 or epoch == epochs - 1:
+            test_accuracy, test_loss = test_model(
+                model, test_loader, criterion, device, epoch
+            )
+            test_accuracies.append(test_accuracy)
 
         if writer:
             writer.add_scalar("Test/Loss", test_loss, epoch)

@@ -13,6 +13,7 @@ import unlearn
 from nets.datasetloader import get_dataset_loader
 from configs import settings
 from nets.custom_model import load_custom_model, ClassifierWrapper
+from nets.train_test import model_test
 
 
 
@@ -40,13 +41,21 @@ def main():
         "forget",
         case,
         batch_size=args.batch_size,
-        shuffle=False,
+        shuffle=True,
     )
 
     _, _, test_loader = get_dataset_loader(
         args.dataset,
         "forget",
         case,
+        batch_size=args.batch_size,
+        shuffle=False,
+    )
+
+    _, _, val_loader = get_dataset_loader(
+        args.dataset,
+        ["test", "forget"],
+        [None, case],
         batch_size=args.batch_size,
         shuffle=False,
     )
@@ -71,7 +80,7 @@ def main():
     )
 
     unlearn_data_loaders = OrderedDict(
-        retain=retain_loader, forget=forget_loader, val=test_loader, test=test_loader
+        retain=retain_loader, forget=forget_loader, val=val_loader, test=test_loader
     )
 
     criterion = nn.CrossEntropyLoss()
@@ -98,7 +107,11 @@ def main():
         mask = save_gradient_ratio(train_loader, model, criterion, args)
         mask = mask[args.mask_thresh]
 
+    # model_test(val_loader, model, device)
+
     model_history = unlearn_method(unlearn_data_loaders, model, criterion, args, mask)
+
+    model_test(val_loader, model, device)
 
     # save model
     os.makedirs(os.path.dirname(save_model_path), exist_ok=True)

@@ -34,7 +34,7 @@ def boundary_shrink_iter(
 ):
     assert test_model is not None
 
-    bound = 0.1  # hard coding in the paper
+    bound = args.alpha
 
     train_loader = data_loaders["forget"]
     losses = utils.AverageMeter()

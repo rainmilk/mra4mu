@@ -61,6 +61,10 @@ def parse_args():
         "--mask_ratio", type=float, default=0.5, help="mask ratio for unlearning"
     )
 
+    parser.add_argument(
+        "--WF_N", type=float, default=1000, help="N"
+    )
+
     # ----------------------- todo add new argument--------------------------------------------------
     parser.add_argument(
         "--load_ff", action="store_true", help="load finetune model and unlearn train"
@@ -252,6 +256,13 @@ def parse_args():
     )
 
     parser.add_argument(
+        "--st_model",
+        type=str,
+        default=None,
+        help="student models",
+    )
+
+    parser.add_argument(
         "--no_spnorm",
         action="store_true",
         default=False,
@@ -371,6 +382,8 @@ def parse_args():
         default=None,
         help="Suffix to save model name",
     )
+
+    parser.add_argument("--test_it", default=2, type=int, help="test iterations")
 
     parser.add_argument("--uni_name", type=str, default=None, help="Model unique name")
 

@@ -22,7 +22,17 @@ def sample_class_forget_data(train_data, train_labels, classes, forget_ratio):
             train_data[idx_forget], train_labels[idx_forget])
 
 
-def split_data(dataset_name, train_dataset, test_dataset, classes, forget_ratio=0.5):
+def gen_forget_cls_data(test_data, test_labels, forget_classes):
+    ts_idx = []
+    for c in forget_classes:
+        idx = np.where(test_labels == c)[0]
+        ts_idx += list(idx)
+    forget_cls_data = test_data[ts_idx]
+    forget_cls_labels = test_labels[ts_idx]
+    return forget_cls_data, forget_cls_labels
+
+
+def split_data(dataset_name, train_dataset, test_dataset, forget_classes, forget_ratio=0.5):
     rawcase = None
     train_data_path = settings.get_dataset_path(dataset_name, rawcase, "train_data")
     train_label_path = settings.get_dataset_path(dataset_name, rawcase, "train_label")
@@ -45,17 +55,13 @@ def split_data(dataset_name, train_dataset, test_dataset, classes, forget_ratio=
     test_data = torch.stack(test_data)
     test_labels = torch.tensor(test_labels)
 
-    ts_idx = []
-    for c in classes:
-        idx = np.where(test_labels == c)[0]
-        ts_idx += list(idx)
-    forget_cls_data = test_data[ts_idx]
-    forget_cls_labels = train_labels[ts_idx]
+
 
     # 构建类均衡的 D_0 和 D_inc_0
-    retain_data, retain_labels, forget_data, forget_labels = sample_class_forget_data(train_data, train_labels,
-        classes, forget_ratio=forget_ratio
-    )
+    retain_data, retain_labels, forget_data, forget_labels = sample_class_forget_data(
+        train_data, train_labels, forget_classes, forget_ratio=forget_ratio)
+
+    forget_cls_data, forget_cls_labels = gen_forget_cls_data(test_data, test_labels, forget_classes)
 
     # forget_cls_data = np.concatenate([forget_cls_data, forget_data], axis=0)
     # forget_cls_labels = np.concatenate([forget_cls_labels, forget_labels], axis=0)
@@ -82,3 +88,19 @@ def split_data(dataset_name, train_dataset, test_dataset, classes, forget_ratio=
     np.save(retain_label_path, retain_labels)
 
     return train_labels
+
+
+if __name__ == '__main__':
+    dataset = 'flower-102'
+    forget_classes = [50, 72, 76, 88, 93]
+    case = settings.get_case(0.5)
+    test_data_path = settings.get_dataset_path(dataset, None, "test_data")
+    test_label_path = settings.get_dataset_path(dataset, None, "test_label")
+    forget_cls_data_path = settings.get_dataset_path(dataset, case, "forget_cls_data")
+    forget_cls_label_path = settings.get_dataset_path(dataset, case, "forget_cls_label")
+    test_data = np.load(test_data_path)
+    test_labels = np.load(test_label_path)
+    forget_cls_data, forget_cls_labels = gen_forget_cls_data(test_data, test_labels, forget_classes)
+    np.save(forget_cls_label_path, forget_cls_labels)
+
+

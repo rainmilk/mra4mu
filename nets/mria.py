@@ -109,9 +109,9 @@ def model_distill(model_teacher, model_student, epoch, data_loader,
             pred_ul = model_teacher(img_aug)
             pred_ul = F.softmax(pred_ul/temperature, dim=1)
 
+            optimizer.zero_grad()
             pred_infer = model_student(img_aug)
             loss = criterion(pred_infer, pred_ul)
-            optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
@@ -149,7 +149,8 @@ def mria_train(args):
         args.dataset, case, args.model, model_suffix="student", unique_name=uni_name,
     )
 
-    model_student = load_custom_model(args.model, num_classes)
+    st_model = args.st_model if args.st_model else args.model
+    model_student = load_custom_model(st_model, num_classes)
     model_student = ClassifierWrapper(model_student, num_classes)
     optimizer, lr_scheduler = create_optimizer_scheduler(
         optimizer_type,
@@ -187,8 +188,8 @@ def mria_train(args):
 
     _, _, forget_loader = get_dataset_loader(
         args.dataset,
-        "forget",
-        case,
+        ["forget_cls"],
+        [case],
         batch_size=args.batch_size,
         shuffle=False,
     )
@@ -220,25 +221,25 @@ def mria_train(args):
         iters = 5
 
         print(f"MRIA Epoch {i}: Alignment Stage")
-        model_teacher = model_ul
-        for _ in range(args.align_epochs):
-            train_predicts, train_probs = model_forward(train_loader, model_teacher)
-            infer_predicts, infer_probs = model_forward(train_loader, model_student)
-            nb_samples = len(train_predicts)
+        def get_conf_data_loader(train_probs, infer_probs):
             joint_probs = torch.as_tensor(train_probs * infer_probs)
+            nb_samples = len(train_probs)
             k = round(top_conf * nb_samples / num_classes)
             _, conf_topk = torch.topk(joint_probs, k=k, dim=0)
             conf_topk = conf_topk.numpy().flatten()
-
-            agree_labels = np.tile(np.arange(num_classes), k)
+            conf_labels = np.tile(np.arange(num_classes), k)
             conf_data = train_data[conf_topk]
-
             # agree_labels = np.argmax(conf_probs, axis=-1)
-            conf_agree_probs = label_smooth(agree_labels, num_classes, gamma=args.ls_gamma)
+            conf_agree_probs = label_smooth(conf_labels, num_classes, gamma=args.ls_gamma)
             conf_dataset = NormalizeDataset(conf_data, conf_agree_probs)
-            conf_data_loader = DataLoader(
-                conf_dataset, batch_size=args.batch_size, drop_last=False, shuffle=True
-            )
+            return DataLoader(conf_dataset, batch_size=args.batch_size, drop_last=False, shuffle=True)
+
+
+        model_teacher = model_ul
+        train_predicts, train_probs = model_forward(train_loader, model_teacher)
+        for _ in range(args.align_epochs):
+            infer_predicts, infer_probs = model_forward(train_loader, model_student)
+            conf_data_loader = get_conf_data_loader(train_probs, infer_probs)
 
             model_train(
                 conf_data_loader,
@@ -252,6 +253,8 @@ def mria_train(args):
             )
             model_test(forget_loader, model_teacher, device)
 
+            train_predicts, train_probs = model_forward(train_loader, model_teacher)
+            conf_data_loader = get_conf_data_loader(train_probs, infer_probs)
             model_train(
                 conf_data_loader,
                 model_student,

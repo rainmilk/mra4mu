@@ -5,11 +5,14 @@ from configs import settings
 from split_dataset import split_data
 import torchvision
 import numpy as np
+import torch
+from nets.datasetloader import BaseTensorDataset
 
 
 def create_dataset_files(
     forget_classes,
     forget_ratio=0.5,
+    data_ratio=0.5
 ):
     weights = torchvision.models.ResNet18_Weights.DEFAULT
     data_transform = transforms.Compose([weights.transforms()])
@@ -25,11 +28,22 @@ def create_dataset_files(
     test_dataset = datasets.Flowers102(
         root=data_dir, split="train", download=True, transform=data_transform
     )
+
+    data, labels = zip(*train_dataset)
+    data = torch.stack(data)
+    labels = torch.tensor(labels)
+    nb_data = len(labels)
+    idx = np.random.choice(nb_data, size=round(nb_data * data_ratio))
+    data = data[idx]
+    labels = labels[idx]
+    train_dataset = BaseTensorDataset(data, labels)
+
     train_labels = split_data(
         dataset_name, train_dataset, test_dataset, forget_classes, forget_ratio
     )
     results = np.unique(train_labels, return_index=True, return_counts=True)
     print(results)
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -47,11 +61,16 @@ def main():
         "--forget_ratio", type=float, default=0.5, help="忘记比例（默认 0.5）"
     )
 
+    parser.add_argument(
+        "--data_ratio", type=float, default=0.5, help="data ratio"
+    )
+
     args = parser.parse_args()
 
     create_dataset_files(
         forget_classes=args.forget_classes,
         forget_ratio=args.forget_ratio,
+        data_ratio = args.data_ratio
     )
 
 

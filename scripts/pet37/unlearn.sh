@@ -4,7 +4,7 @@ echo "PYTHONPATH is set to: $PYTHONPATH"
 
 # FT, RL, GA, IU, BU, L1, SalUn
 # 9.6
-python main_mu.py --dataset pet-37 --model resnet18 --forget_ratio 0.5 --alpha 1 --unlearn_lr 12e-2 --uni_name FT --num_epochs 6  --batch_size 256
+python main_mu.py --dataset pet-37 --model resnet18 --forget_ratio 0.5 --alpha 1 --unlearn_lr 12e-2 --uni_name FT --num_epochs 6  --batch_size 32
 # 4.8
 python main_mu.py --dataset pet-37 --model resnet18 --forget_ratio 0.5 --alpha 1 --unlearn_lr 1e-2 --uni_name RL --num_epochs 10  --batch_size 32
 # 20.8

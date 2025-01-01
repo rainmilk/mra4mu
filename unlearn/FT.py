@@ -82,6 +82,15 @@ def FT_iter(data_loaders, model, criterion, optimizer, epoch, args, with_l1=Fals
                 )
                 start = time.time()
     else:
+        if args.no_l1_epochs < 0:
+            current_alpha = args.alpha
+        elif epoch < args.num_epochs - args.no_l1_epochs:
+            current_alpha = args.alpha * (
+                    1 - epoch / (args.num_epochs - args.no_l1_epochs)
+            )
+        else:
+            current_alpha = 0
+
         for i, (image, target) in enumerate(train_loader):
             if epoch < args.warmup:
                 utils.warmup_lr(
@@ -90,15 +99,7 @@ def FT_iter(data_loaders, model, criterion, optimizer, epoch, args, with_l1=Fals
 
             image = image.cuda()
             target = target.cuda()
-            if epoch < args.num_epochs - args.no_l1_epochs:
-                current_alpha = args.alpha * (
-                    1 - epoch / (args.num_epochs - args.no_l1_epochs)
-                )
-                # current_alpha = args.alpha * (epoch / (args.num_epochs-args.no_l1_epochs))
-            elif args.num_epochs - args.no_l1_epochs == 0:
-                current_alpha = args.alpha
-            else:
-                current_alpha = 0
+
             # compute output
             output_clean = model(image)
             loss = criterion(output_clean, target)
