@@ -188,7 +188,7 @@ def mria_train(args):
 
     _, _, forget_loader = get_dataset_loader(
         args.dataset,
-        ["forget_cls"],
+        ["forget"],
         [case],
         batch_size=args.batch_size,
         shuffle=False,
