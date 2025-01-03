@@ -6,8 +6,6 @@ from .impl import iterative_unlearn
 from utils import get_x_y_from_data_dict
 
 import numpy as np
-import os
-
 
 @iterative_unlearn
 def SalUn(data_loaders, model, criterion, optimizer, epoch, args, mask=None):

@@ -360,7 +360,7 @@ def parse_args():
     parser.add_argument(
         "--top_conf",
         type=float,
-        default=0.1,
+        default=0.05,
         help="Percentage of top confidence",
     )
 

@@ -3,6 +3,8 @@ from copy import deepcopy
 
 import numpy as np
 import torch
+from torch.utils.data import DataLoader, Dataset
+
 import utils
 
 from .impl import iterative_unlearn
@@ -13,10 +15,13 @@ def RL(data_loaders, model, criterion, optimizer, epoch, args, mask=None):
     forget_loader = data_loaders["forget"]
     retain_loader = data_loaders["retain"]
     forget_dataset = deepcopy(forget_loader.dataset)
+    retain_dataset = retain_loader.dataset
 
     forget_dataset.labels = np.random.randint(0, args.num_classes, forget_dataset.labels.shape)
-
-    retain_dataset = retain_loader.dataset
+    nb_forget = len(forget_dataset)
+    nb_retain = len(retain_dataset)
+    retain_dataset = torch.utils.data.Subset(retain_dataset,
+                                             np.random.choice(np.arange(nb_retain), nb_forget, replace=False))
     train_dataset = torch.utils.data.ConcatDataset([forget_dataset, retain_dataset])
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
     losses = utils.AverageMeter()

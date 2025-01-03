@@ -10,8 +10,8 @@ def model_train(
     train_loader,
     model,
     optimizer,
-    lr_scheduler,
-    criterion,
+    lr_scheduler=None,
+    criterion=None,
     epochs=5,
     args=None,
     device="cuda",
@@ -36,7 +36,6 @@ def model_train(
         correct = 0
         total = 0
 
-        # 更新学习率调度器
         model.train()
         # 用 tqdm 显示训练进度条
         with tqdm(total=len(train_loader), desc=f"Epoch {epoch + 1} Training") as pbar:
@@ -72,7 +71,9 @@ def model_train(
                 pbar.set_postfix({"Loss": f"{loss.item():.4f}"})
                 pbar.update(1)
 
-        lr_scheduler.step(epoch)
+        # 更新学习率调度器
+        if lr_scheduler:
+            lr_scheduler.step(epoch)
 
         avg_loss = running_loss / len(train_loader)  # 计算平均损失
         accuracy = correct / total  # 计算训练集的准确率

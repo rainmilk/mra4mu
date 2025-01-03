@@ -21,9 +21,9 @@ import utils
 import arg_parser
 
 
-def sharpen(probs, temperature=1.0, axis=-1):
-    probs = probs ** (1.0 / temperature)
-    return probs / np.sum(probs, axis=-1, keepdims=True)
+def laplace_smooth(probs, beta=0.2, axis=-1):
+    probs += beta
+    return probs / np.sum(probs, axis=axis, keepdims=True)
 
 
 def label_smooth(labels, num_classes, gamma=0.0):
@@ -98,7 +98,7 @@ def mix_up_dataloader(
 
 
 def model_distill(model_teacher, model_student, epoch, data_loader,
-                  transforms, criterion, optimizer, device, temperature=1):
+                  transforms, criterion, optimizer, device):
     with tqdm(total=len(data_loader), desc=f"Epoch {epoch + 1} Distillation") as pbar:
         model_teacher.eval()
         model_student.train()
@@ -107,7 +107,7 @@ def model_distill(model_teacher, model_student, epoch, data_loader,
             img_aug = transforms(image).to(device)
             # image_mixup = auto_mixup(image, None, alpha=0.75, device=device)
             pred_ul = model_teacher(img_aug)
-            pred_ul = F.softmax(pred_ul/temperature, dim=1)
+            pred_ul = F.softmax(pred_ul, dim=1)
 
             optimizer.zero_grad()
             pred_infer = model_student(img_aug)
@@ -118,6 +118,19 @@ def model_distill(model_teacher, model_student, epoch, data_loader,
             pbar.set_postfix({"Loss": f"{loss.item():.4f}"})
             pbar.update(1)
 
+
+def get_conf_data_loader(data, num_classes, conf_thresh, probs1, probs2, beta=0.2):
+    joint_probs = torch.as_tensor(laplace_smooth(probs1, beta) * laplace_smooth(probs2, beta))
+    nb_samples = len(probs1)
+    k = max(1, round(conf_thresh * nb_samples / num_classes))
+    _, conf_topk = torch.topk(joint_probs, k=k, dim=0)
+    conf_topk = conf_topk.numpy().flatten()
+    conf_labels = np.tile(np.arange(num_classes), k)
+    conf_data = data[conf_topk]
+    # agree_labels = np.argmax(conf_probs, axis=-1)
+    conf_agree_probs = label_smooth(conf_labels, num_classes, gamma=args.ls_gamma)
+    conf_dataset = NormalizeDataset(conf_data, conf_agree_probs)
+    return DataLoader(conf_dataset, batch_size=args.batch_size, drop_last=False, shuffle=True)
 
 def mria_train(args):
     num_classes = settings.num_classes_dict[args.dataset]
@@ -202,44 +215,35 @@ def mria_train(args):
         shuffle=True,
     )
 
-    model_test(forget_loader, model_ul, device)
+    model_test(train_loader, model_ul, device)
     auto_mix = partial(auto_mixup, labels=None, alpha=0.75)
     temperature = args.temperature
 
+    # lr_scheduler = None
+    # ul_lr_scheduler = None
     for i in tqdm(range(num_epochs), desc="MRIA"):
         # Distillation Stage
         print(f"MRIA Epoch {i}: Distillation Stage")
         for epoch in range(args.distill_epochs):
             model_distill(model_ul, model_student, epoch, data_loader,
-                          auto_mix, loss_fn, optimizer, device, temperature)
+                          auto_mix, loss_fn, optimizer, device)
             model_test(forget_loader, model_student, device)
-            lr_scheduler.step(epoch)
-
+        if lr_scheduler:
+            lr_scheduler.step(i)
 
         # Alignment Stage
         top_conf = args.top_conf
         iters = 5
 
         print(f"MRIA Epoch {i}: Alignment Stage")
-        def get_conf_data_loader(train_probs, infer_probs):
-            joint_probs = torch.as_tensor(train_probs * infer_probs)
-            nb_samples = len(train_probs)
-            k = round(top_conf * nb_samples / num_classes)
-            _, conf_topk = torch.topk(joint_probs, k=k, dim=0)
-            conf_topk = conf_topk.numpy().flatten()
-            conf_labels = np.tile(np.arange(num_classes), k)
-            conf_data = train_data[conf_topk]
-            # agree_labels = np.argmax(conf_probs, axis=-1)
-            conf_agree_probs = label_smooth(conf_labels, num_classes, gamma=args.ls_gamma)
-            conf_dataset = NormalizeDataset(conf_data, conf_agree_probs)
-            return DataLoader(conf_dataset, batch_size=args.batch_size, drop_last=False, shuffle=True)
-
 
         model_teacher = model_ul
         train_predicts, train_probs = model_forward(train_loader, model_teacher)
         for _ in range(args.align_epochs):
+            # train_predicts, train_probs = model_forward(train_loader, model_teacher)
             infer_predicts, infer_probs = model_forward(train_loader, model_student)
-            conf_data_loader = get_conf_data_loader(train_probs, infer_probs)
+            conf_data_loader = get_conf_data_loader(train_data, num_classes, top_conf,
+                                                    infer_probs, train_probs)
 
             model_train(
                 conf_data_loader,
@@ -254,7 +258,8 @@ def mria_train(args):
             model_test(forget_loader, model_teacher, device)
 
             train_predicts, train_probs = model_forward(train_loader, model_teacher)
-            conf_data_loader = get_conf_data_loader(train_probs, infer_probs)
+            conf_data_loader = get_conf_data_loader(train_data, num_classes, top_conf,
+                                                    train_probs, infer_probs)
             model_train(
                 conf_data_loader,
                 model_student,

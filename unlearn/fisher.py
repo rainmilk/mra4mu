@@ -5,13 +5,16 @@ from torch.autograd import grad
 from tqdm import tqdm
 from nets.train_test import model_test
 
-def fisher_information_martix(model, train_dl, device):
+def fisher_information_martix(model, train_dl, device, N):
     model.eval()
     fisher_approximation = []
     for parameter in model.parameters():
         fisher_approximation.append(torch.zeros_like(parameter).to(device))
     total = 0
+
     for i, (data, label) in enumerate(tqdm(train_dl)):
+        if i > N:
+            break
         data = data.to(device)
         label = label.to(device)
         predictions = torch.log_softmax(model(data), dim=-1)
@@ -38,7 +41,7 @@ def fisher(data_loaders, model, criterion, args, mask=None):
     forget_loader = data_loaders["forget"]
 
     device = f"cuda:{int(args.gpu)}" if torch.cuda.is_available() else "cpu"
-    fisher_approximation = fisher_information_martix(model, retain_loader, device)
+    fisher_approximation = fisher_information_martix(model, retain_loader, device, args.WF_N)
     for i, parameter in enumerate(model.parameters()):
         noise = torch.sqrt(args.alpha / fisher_approximation[i]).clamp(
             max=1e-3

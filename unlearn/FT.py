@@ -8,7 +8,6 @@ from train_test_utils import test_model
 
 from .impl import iterative_unlearn
 
-sys.path.append(".")
 from utils import get_x_y_from_data_dict
 
 
