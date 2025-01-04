@@ -96,7 +96,7 @@ def load_custom_model(model_name, num_classes, load_pretrained=True, ckpt_path=N
         else:
             model = models.vgg16(num_classes=num_classes)
     else:
-        raise Exception(f"{model_name} is not supported")
+        raise NotImplementedError(f"{model_name} is not supported")
 
 
     if model and ckpt_path:

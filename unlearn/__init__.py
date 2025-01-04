@@ -3,6 +3,7 @@ from .FT import FT, FT_l1
 from .FT_prune import FT_prune
 from .FT_prune_bi import FT_prune_bi
 from .GA import GA, GA_l1
+from .GA_prune import GA_prune
 from .impl import load_unlearn_checkpoint, save_unlearn_checkpoint
 from .retrain import retrain
 from .retrain_ls import retrain_ls
@@ -28,6 +29,8 @@ def get_unlearn_method(name):
         return GA
     elif name == "GA_l1":
         return GA_l1
+    elif name == "GA_prune":
+        return GA_prune
     elif name == "BU":
         return boundary_shrink
     elif name == "FT":

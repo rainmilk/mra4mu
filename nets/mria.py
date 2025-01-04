@@ -27,7 +27,9 @@ def laplace_smooth(probs, beta=0.2, axis=-1):
 
 
 def label_smooth(labels, num_classes, gamma=0.0):
-    return np.diag(np.ones(num_classes) - gamma)[labels] + gamma / num_classes
+    gm = gamma / (1 + num_classes * gamma)
+    label_diag = np.diag(np.ones(num_classes) / (1 + num_classes * gamma))
+    return (label_diag + gm)[labels]
 
 
 def auto_mixup(images, labels=None, alpha=0.75):
