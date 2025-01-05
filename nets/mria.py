@@ -113,7 +113,6 @@ def model_distill(model_teacher, model_student, epoch, data_loader,
 
             pred_infer = model_student(img_aug)
             pred_ul = (pred_ul + F.softmax(pred_infer, dim=1))/2
-            pred_ul = laplace_smooth(pred_ul)
 
             optimizer.zero_grad()
             loss = criterion(pred_infer, pred_ul)
