@@ -113,6 +113,7 @@ def model_distill(model_teacher, model_student, epoch, data_loader,
 
             pred_infer = model_student(img_aug)
             pred_ul = (pred_ul + F.softmax(pred_infer, dim=1))/2
+            pred_ul = laplace_smooth(pred_ul)
 
             optimizer.zero_grad()
             loss = criterion(pred_infer, pred_ul)
@@ -153,6 +154,7 @@ def mria_train(args):
     optimizer_type = args.optimizer
     num_epochs = args.num_epochs
     uni_name = args.uni_name
+    update_teacher = args.no_t_update
 
     ul_model_path = settings.get_ckpt_path(
         args.dataset, case, args.model, model_suffix="ul", unique_name=uni_name,
@@ -162,8 +164,9 @@ def mria_train(args):
         args.dataset, case, args.model, model_suffix="restore", unique_name=uni_name,
     )
 
+    student_suffix = "student" if update_teacher else "student_only"
     model_student_path = settings.get_ckpt_path(
-        args.dataset, case, args.model, model_suffix="student", unique_name=uni_name,
+        args.dataset, case, args.model, model_suffix=student_suffix, unique_name=uni_name,
     )
 
     st_model = args.st_model if args.st_model else args.model
@@ -221,7 +224,6 @@ def mria_train(args):
 
     model_test(train_loader, model_ul, device)
     auto_mix = partial(auto_mixup, labels=None, alpha=0.75)
-    update_teacher = args.no_t_update
 
     # lr_scheduler = None
     # ul_lr_scheduler = None
@@ -279,8 +281,9 @@ def mria_train(args):
 
     print("Teacher Model Performance:")
     model_test(train_loader, model_ul, device)
-    state = model_ul.state_dict()
-    torch.save(state, model_save_path)
+    if update_teacher:
+        state = model_ul.state_dict()
+        torch.save(state, model_save_path)
 
     print("Student Model Performance:")
     model_test(train_loader, model_student, device)
