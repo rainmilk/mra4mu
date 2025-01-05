@@ -384,10 +384,9 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--update_teacher",
-        type=bool,
-        default=True,
-        help="Update teacher",
+        "--no_t_update",
+        action="store_false",
+        help="No update teacher",
     )
 
 

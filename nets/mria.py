@@ -219,7 +219,7 @@ def mria_train(args):
 
     model_test(train_loader, model_ul, device)
     auto_mix = partial(auto_mixup, labels=None, alpha=0.75)
-    update_teacher = args.update_teacher
+    update_teacher = not args.no_t_update
 
     # lr_scheduler = None
     # ul_lr_scheduler = None
