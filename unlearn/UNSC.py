@@ -96,11 +96,11 @@ def UNSC_iter(data_loaders, model, criterion, optimizer, epoch, args, mask,
     retain_loader = data_loaders["retain"]
     forget_loader = data_loaders["forget"]
     retain_dataset = retain_loader.dataset
-    # nb_retain = len(retain_dataset)
-    # nb_samples = min(len(forget_loader.dataset) * 10, len(retain_dataset), 1000)
-    # subset = torch.utils.data.Subset(retain_dataset, np.random.choice(np.arange(nb_retain), size=nb_samples))
-    subset = torch.utils.data.ConcatDataset([retain_dataset, forget_loader.dataset])
-    train_loader = DataLoader(subset, batch_size=args.batch_size, shuffle=True)
+    nb_retain = len(retain_dataset)
+    nb_samples = min(len(forget_loader.dataset) * 10, len(retain_dataset), args.WF_N)
+    subset = torch.utils.data.Subset(retain_dataset, np.random.choice(np.arange(nb_retain), size=nb_samples))
+    subset = torch.utils.data.ConcatDataset([subset, forget_loader.dataset])
+    train_loader = DataLoader(subset, batch_size=args.batch_size, drop_last=True, shuffle=True)
 
     test_model.eval()
     for ep in range(args.num_epochs):
