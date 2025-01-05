@@ -93,7 +93,14 @@ def get_pseudo_label(args, model, x):
 @iterative_unlearn
 def UNSC_iter(data_loaders, model, criterion, optimizer, epoch, args, mask,
               proj_mat_list, test_model=None):
-    train_loader = data_loaders
+    retain_loader = data_loaders["retain"]
+    forget_loader = data_loaders["forget"]
+    retain_dataset = retain_loader.dataset
+    # nb_retain = len(retain_dataset)
+    # nb_samples = min(len(forget_loader.dataset) * 10, len(retain_dataset), 1000)
+    # subset = torch.utils.data.Subset(retain_dataset, np.random.choice(np.arange(nb_retain), size=nb_samples))
+    subset = torch.utils.data.ConcatDataset([retain_dataset, forget_loader.dataset])
+    train_loader = DataLoader(subset, batch_size=args.batch_size, shuffle=True)
 
     test_model.eval()
     for ep in range(args.num_epochs):
@@ -121,40 +128,55 @@ def UNSC_iter(data_loaders, model, criterion, optimizer, epoch, args, mask,
 
 def UNSC(data_loaders, model: nn.Module, criterion, args, mask=None):
     # %%
-    num_classes = settings.num_classes_dict[args.dataset]
+    # num_classes = settings.num_classes_dict[args.dataset]
     retain_loader = data_loaders["retain"]
-    forget_loader = data_loaders["forget"]
-    retain_dataset = retain_loader.dataset
-    nb_retain = len(retain_dataset)
-    nb_samples = min(len(forget_loader.dataset) * 10, len(retain_dataset), 1000)
-    subset = torch.utils.data.Subset(retain_dataset, np.random.choice(np.arange(nb_retain), size=nb_samples))
-    subset = torch.utils.data.ConcatDataset([subset, forget_loader.dataset])
-    train_loader = DataLoader(subset, batch_size=args.batch_size, shuffle=False)
+    # forget_loader = data_loaders["forget"]
+    # retain_dataset = retain_loader.dataset
+    # nb_retain = len(retain_dataset)
+    # nb_samples = min(len(forget_loader.dataset) * 10, len(retain_dataset), 1000)
+    # subset = torch.utils.data.Subset(retain_dataset, np.random.choice(np.arange(nb_retain), size=nb_samples))
+    # # subset = torch.utils.data.ConcatDataset([subset, forget_loader.dataset])
+    # retain_loader = DataLoader(subset, batch_size=args.batch_size, shuffle=True)
 
     Proj_mat_lst = []
-    _, train_targets_list = zip(*train_loader.dataset)
-    # for i in range(3):
-    merged_feat_mat = []
-    for cls_id in range(num_classes):
-        cls_indices = np.where(np.isin(train_targets_list, cls_id))[0]
-        # cls_indices = train_loader.sampler.indices[cls_indices]
-        cls_sampler = torch.utils.data.SubsetRandomSampler(cls_indices)
-        cls_loader_dict = torch.utils.data.DataLoader(train_loader.dataset,
-                                                      batch_size=args.batch_size,
-                                                      sampler=cls_sampler)
-        if cls_id in args.class_to_replace:
-            continue
+    # _, train_targets_list = zip(*train_loader.dataset)
+    # # for i in range(3):
+    # merged_feat_mat = []
+    # for cls_id in range(10):
+    #     cls_indices = np.where(np.isin(train_targets_list, cls_id))[0]
+    #     # cls_indices = train_loader.sampler.indices[cls_indices]
+    #     cls_sampler = torch.utils.data.SubsetRandomSampler(cls_indices)
+    #     cls_loader_dict = torch.utils.data.DataLoader(train_loader.dataset,
+    #                                                   batch_size=args.batch_size,
+    #                                                   sampler=cls_sampler)
+    #     if cls_id in args.class_to_replace:
+    #         continue
+    #
+    #     for batch, (x, y) in enumerate(cls_loader_dict):
+    #         with torch.no_grad():
+    #             x = x.cuda()
+    #             _ = model(x)
+    #         n_acts = len(model.in_act.items())
+    #         print(f"Activations {n_acts}")
+    #         mat_list = get_representation_matrix(model, batch_list=[args.batch_size]*n_acts)
+    #         break
+    #     threshold = 0.96 + 0.003 * cls_id
+    #     merged_feat_mat = update_GPM(mat_list, threshold, merged_feat_mat)
+    #     proj_mat = [torch.Tensor(np.dot(layer_basis, layer_basis.transpose())) for layer_basis in merged_feat_mat]
+    #     Proj_mat_lst.append(proj_mat)
 
+    for i in range(1):
         model.eval()
-        for batch, (x, y) in enumerate(cls_loader_dict):
-            with torch.no_grad():
+        merged_feat_mat = []
+        with torch.no_grad():
+            for batch, (x, y) in enumerate(retain_loader):
                 x = x.cuda()
                 _ = model(x)
-            n_acts = len(model.in_act.items())
-            print(f"Activations {n_acts}")
-            mat_list = get_representation_matrix(model, batch_list=[args.batch_size]*n_acts)
-            break
-        threshold = 0.96 + 0.0003 * cls_id
+                n_acts = len(model.in_act.items())
+                mat_list = get_representation_matrix(model, batch_list=[args.batch_size] * n_acts)
+                break
+
+        threshold = 0.99
         merged_feat_mat = update_GPM(mat_list, threshold, merged_feat_mat)
         proj_mat = [torch.Tensor(np.dot(layer_basis, layer_basis.transpose())) for layer_basis in merged_feat_mat]
         Proj_mat_lst.append(proj_mat)
@@ -166,5 +188,5 @@ def UNSC(data_loaders, model: nn.Module, criterion, args, mask=None):
         if isinstance(m, nn.BatchNorm2d) or isinstance(m, nn.BatchNorm1d):
             m.eval()
 
-    return UNSC_iter(train_loader, model, criterion, args=args, mask=mask,
+    return UNSC_iter(data_loaders, model, criterion, args=args, mask=mask,
                      proj_mat_list=Proj_mat_lst, test_model=test_model)
