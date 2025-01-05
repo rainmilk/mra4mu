@@ -111,8 +111,10 @@ def model_distill(model_teacher, model_student, epoch, data_loader,
             pred_ul = model_teacher(img_aug)
             pred_ul = F.softmax(pred_ul, dim=1)
 
-            optimizer.zero_grad()
             pred_infer = model_student(img_aug)
+            pred_ul = (pred_ul + F.softmax(pred_infer, dim=1))/2
+
+            optimizer.zero_grad()
             loss = criterion(pred_infer, pred_ul)
             loss.backward()
             optimizer.step()
@@ -219,7 +221,7 @@ def mria_train(args):
 
     model_test(train_loader, model_ul, device)
     auto_mix = partial(auto_mixup, labels=None, alpha=0.75)
-    update_teacher = not args.no_t_update
+    update_teacher = args.no_t_update
 
     # lr_scheduler = None
     # ul_lr_scheduler = None
