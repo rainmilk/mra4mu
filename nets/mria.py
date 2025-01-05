@@ -219,7 +219,7 @@ def mria_train(args):
 
     model_test(train_loader, model_ul, device)
     auto_mix = partial(auto_mixup, labels=None, alpha=0.75)
-    temperature = args.temperature
+    update_teacher = args.update_teacher
 
     # lr_scheduler = None
     # ul_lr_scheduler = None
@@ -247,17 +247,18 @@ def mria_train(args):
             conf_data_loader = get_conf_data_loader(train_data, num_classes, top_conf,
                                                     infer_probs, train_probs)
 
-            model_train(
-                conf_data_loader,
-                model_teacher,
-                ul_optimizer,
-                ul_lr_scheduler,
-                loss_fn,
-                iters,
-                args,
-                device=device,
-            )
-            model_test(forget_loader, model_teacher, device)
+            if update_teacher:
+                model_train(
+                    conf_data_loader,
+                    model_teacher,
+                    ul_optimizer,
+                    ul_lr_scheduler,
+                    loss_fn,
+                    iters,
+                    args,
+                    device=device,
+                )
+                model_test(forget_loader, model_teacher, device)
 
             train_predicts, train_probs = model_forward(train_loader, model_teacher)
             conf_data_loader = get_conf_data_loader(train_data, num_classes, top_conf,

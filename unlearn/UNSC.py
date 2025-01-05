@@ -93,18 +93,18 @@ def get_pseudo_label(args, model, x):
 @iterative_unlearn
 def UNSC_iter(data_loaders, model, criterion, optimizer, epoch, args, mask,
               proj_mat_list, test_model=None):
-    retain_loader = data_loaders["retain"]
+    # retain_loader = data_loaders["retain"]
     forget_loader = data_loaders["forget"]
-    retain_dataset = retain_loader.dataset
-    nb_retain = len(retain_dataset)
-    nb_samples = min(len(forget_loader.dataset) * 10, len(retain_dataset), args.WF_N)
-    subset = torch.utils.data.Subset(retain_dataset, np.random.choice(np.arange(nb_retain), size=nb_samples))
-    subset = torch.utils.data.ConcatDataset([subset, forget_loader.dataset])
-    train_loader = DataLoader(subset, batch_size=args.batch_size, drop_last=True, shuffle=True)
+    # retain_dataset = retain_loader.dataset
+    # nb_retain = len(retain_dataset)
+    # nb_samples = min(len(forget_loader.dataset) * 10, len(retain_dataset), args.WF_N)
+    # subset = torch.utils.data.Subset(retain_dataset, np.random.choice(np.arange(nb_retain), size=nb_samples))
+    # subset = torch.utils.data.ConcatDataset([subset, forget_loader.dataset])
+    # train_loader = DataLoader(subset, batch_size=args.batch_size, drop_last=True, shuffle=True)
 
     test_model.eval()
     for ep in range(args.num_epochs):
-        for batch, (x, y) in enumerate(train_loader):
+        for batch, (x, y) in enumerate(forget_loader):
             x = x.cuda()
             y = get_pseudo_label(args, test_model, x)
             pred_y = model(x)
@@ -130,41 +130,8 @@ def UNSC(data_loaders, model: nn.Module, criterion, args, mask=None):
     # %%
     # num_classes = settings.num_classes_dict[args.dataset]
     retain_loader = data_loaders["retain"]
-    # forget_loader = data_loaders["forget"]
-    # retain_dataset = retain_loader.dataset
-    # nb_retain = len(retain_dataset)
-    # nb_samples = min(len(forget_loader.dataset) * 10, len(retain_dataset), 1000)
-    # subset = torch.utils.data.Subset(retain_dataset, np.random.choice(np.arange(nb_retain), size=nb_samples))
-    # # subset = torch.utils.data.ConcatDataset([subset, forget_loader.dataset])
-    # retain_loader = DataLoader(subset, batch_size=args.batch_size, shuffle=True)
 
     Proj_mat_lst = []
-    # _, train_targets_list = zip(*train_loader.dataset)
-    # # for i in range(3):
-    # merged_feat_mat = []
-    # for cls_id in range(10):
-    #     cls_indices = np.where(np.isin(train_targets_list, cls_id))[0]
-    #     # cls_indices = train_loader.sampler.indices[cls_indices]
-    #     cls_sampler = torch.utils.data.SubsetRandomSampler(cls_indices)
-    #     cls_loader_dict = torch.utils.data.DataLoader(train_loader.dataset,
-    #                                                   batch_size=args.batch_size,
-    #                                                   sampler=cls_sampler)
-    #     if cls_id in args.class_to_replace:
-    #         continue
-    #
-    #     for batch, (x, y) in enumerate(cls_loader_dict):
-    #         with torch.no_grad():
-    #             x = x.cuda()
-    #             _ = model(x)
-    #         n_acts = len(model.in_act.items())
-    #         print(f"Activations {n_acts}")
-    #         mat_list = get_representation_matrix(model, batch_list=[args.batch_size]*n_acts)
-    #         break
-    #     threshold = 0.96 + 0.003 * cls_id
-    #     merged_feat_mat = update_GPM(mat_list, threshold, merged_feat_mat)
-    #     proj_mat = [torch.Tensor(np.dot(layer_basis, layer_basis.transpose())) for layer_basis in merged_feat_mat]
-    #     Proj_mat_lst.append(proj_mat)
-
     for i in range(1):
         model.eval()
         merged_feat_mat = []

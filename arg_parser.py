@@ -383,6 +383,14 @@ def parse_args():
         help="Suffix to save model name",
     )
 
+    parser.add_argument(
+        "--update_teacher",
+        type=bool,
+        default=True,
+        help="Update teacher",
+    )
+
+
     parser.add_argument("--test_it", default=2, type=int, help="test iterations")
 
     parser.add_argument("--uni_name", type=str, default=None, help="Model unique name")
