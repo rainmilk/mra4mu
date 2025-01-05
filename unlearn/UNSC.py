@@ -116,7 +116,7 @@ def UNSC_iter(data_loaders, model, criterion, optimizer, epoch, args, mask,
                 if len(params.size()) != 1:
                     sz = params.grad.data.size(0)
                     params.grad.data = params.grad.data - torch.mm(params.grad.data.view(sz, -1),
-                                                                   proj_mat_list[epoch][kk].cuda()).view(params.size())
+                                                                   proj_mat_list[0][kk].cuda()).view(params.size())
                     kk += 1
                 elif len(params.size()) == 1:
                     params.grad.data.fill_(0)
