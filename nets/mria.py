@@ -21,14 +21,14 @@ import utils
 import arg_parser
 
 
-def laplace_smooth(probs, beta=0.2, axis=-1):
+def laplace_smooth(probs, beta=0.02, axis=-1):
     probs += beta
     return probs / np.sum(probs, axis=axis, keepdims=True)
 
 
 def label_smooth(labels, num_classes, gamma=0.0):
-    gm = gamma / (1 + num_classes * gamma)
-    label_diag = np.diag(np.ones(num_classes) / (1 + num_classes * gamma))
+    gm = gamma / num_classes
+    label_diag = np.diag(np.ones(num_classes) - gamma)
     return (label_diag + gm)[labels]
 
 
@@ -121,7 +121,7 @@ def model_distill(model_teacher, model_student, epoch, data_loader,
             pbar.update(1)
 
 
-def get_conf_data_loader(data, num_classes, conf_thresh, probs1, probs2, beta=0.2):
+def get_conf_data_loader(data, num_classes, conf_thresh, probs1, probs2, beta=0.02):
     joint_probs = torch.as_tensor(laplace_smooth(probs1, beta) * laplace_smooth(probs2, beta))
     nb_samples = len(probs1)
     k = max(1, round(conf_thresh * nb_samples / num_classes))
