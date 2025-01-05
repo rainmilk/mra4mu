@@ -72,4 +72,4 @@ def RL(data_loaders, model, criterion, optimizer, epoch, args, mask=None):
                 epoch, i, loader_len, end - start, loss=losses, top1=top1))
             start = time.time()
 
-    return model
+    return top1.avg

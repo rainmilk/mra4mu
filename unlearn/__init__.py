@@ -13,6 +13,7 @@ from .SAM import SAM
 from .BU import boundary_shrink
 from .RL import RL
 from .SalUn import SalUn
+from .UNSC import UNSC
 
 
 def raw(data_loaders, model, criterion, args):
@@ -57,5 +58,7 @@ def get_unlearn_method(name):
         return RL
     elif name == "SalUn":
         return SalUn
+    elif name == "UNSC":
+        return UNSC
     else:
         raise NotImplementedError(f"Unlearn method {name} not implemented!")

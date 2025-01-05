@@ -12,7 +12,7 @@ import unlearn
 
 from nets.datasetloader import get_dataset_loader
 from configs import settings
-from nets.custom_model import load_custom_model, ClassifierWrapper
+from nets.custom_model import load_custom_model, ClassifierWrapperHooker
 from nets.train_test import model_test
 
 
@@ -27,6 +27,14 @@ def main():
     uni_name = args.uni_name
     num_classes = settings.num_classes_dict[args.dataset]
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    _, _, train_loader = get_dataset_loader(
+        args.dataset,
+        "train",
+        None,
+        batch_size=args.batch_size,
+        shuffle=True,
+    )
 
     _, _, retain_loader = get_dataset_loader(
         args.dataset,
@@ -80,7 +88,7 @@ def main():
     )
 
     unlearn_data_loaders = OrderedDict(
-        retain=retain_loader, forget=forget_loader, val=val_loader, test=test_loader
+        train=train_loader, retain=retain_loader, forget=forget_loader, val=val_loader, test=test_loader
     )
 
     criterion = nn.CrossEntropyLoss()
@@ -90,7 +98,7 @@ def main():
     loaded_model = load_custom_model(
         args.model, num_classes, load_pretrained=False
     )
-    model = ClassifierWrapper(loaded_model, num_classes)
+    model = ClassifierWrapperHooker(loaded_model, num_classes)
     checkpoint = torch.load(load_model_path)
     model.load_state_dict(checkpoint, strict=False)
     model.to(device)
