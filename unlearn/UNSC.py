@@ -6,16 +6,15 @@ import torch
 from torch.utils.data import DataLoader
 from torch import nn
 
+from configs import settings
+from unlearn.impl import iterative_unlearn
+
 
 def compute_conv_output_size(Lin, kernel_size, stride=1, padding=0, dilation=1):
     return int(np.floor((Lin+2*padding-dilation*(kernel_size-1)-1)/float(stride)+1))
 
 
-def get_representation_matrix(net, x, batch_list=[24, 100, 100, 125, 125, 125]):
-    net.eval()
-    with torch.no_grad():
-        x = x.cuda()
-        _ = net(x)
+def get_representation_matrix(net, batch_list=[24, 100, 100, 125, 125, 125]):
     mat_list = []
     for i, (layer_name, in_act_map) in enumerate(net.in_act.items()):
         bsz = batch_list[i]
@@ -86,15 +85,17 @@ def update_GPM(mat_list, threshold, feature_list=[]):
 
 def get_pseudo_label(args, model, x):
     masked_output = model(x)
-    masked_output[:, args.unlearn_class] = -np.inf
+    masked_output[:, args.class_to_replace] = -np.inf
     pseudo_labels = torch.topk(masked_output, k=1, dim=1).indices
     return pseudo_labels.reshape(-1)
 
 
+@iterative_unlearn
 def UNSC_iter(data_loaders, model, criterion, optimizer, epoch, args, mask,
               proj_mat_list, test_model=None):
-    train_loader = data_loaders["train"]
+    train_loader = data_loaders
 
+    test_model.eval()
     for ep in range(args.num_epochs):
         for batch, (x, y) in enumerate(train_loader):
             x = x.cuda()
@@ -119,28 +120,51 @@ def UNSC_iter(data_loaders, model, criterion, optimizer, epoch, args, mask,
 
 
 def UNSC(data_loaders, model: nn.Module, criterion, args, mask=None):
-    device = model.parameters().__next__().device
-    test_model = deepcopy(model).to(device)
-    sgd_mr_model = model
-    sgd_mr_model.train()
-    for m in sgd_mr_model.modules():
-        if isinstance(m, nn.BatchNorm2d) or isinstance(m, nn.BatchNorm1d):
-            m.eval()
     # %%
+    num_classes = settings.num_classes_dict[args.dataset]
     retain_loader = data_loaders["retain"]
+    forget_loader = data_loaders["forget"]
+    retain_dataset = retain_loader.dataset
+    nb_retain = len(retain_dataset)
+    nb_samples = min(len(forget_loader.dataset) * 10, len(retain_dataset), 1000)
+    subset = torch.utils.data.Subset(retain_dataset, np.random.choice(np.arange(nb_retain), size=nb_samples))
+    subset = torch.utils.data.ConcatDataset([subset, forget_loader.dataset])
+    train_loader = DataLoader(subset, batch_size=args.batch_size, shuffle=False)
+
     Proj_mat_lst = []
-    for i in range(3):
-        feature_list = []
-        merged_feat_mat = []
-        for batch, (x, y) in enumerate(retain_loader):
-            x = x.cuda()
-            y = y.cuda()
-            mat_list = get_representation_matrix(test_model, x, batch_list=[args.batch_size] * 30)
+    _, train_targets_list = zip(*train_loader.dataset)
+    # for i in range(3):
+    merged_feat_mat = []
+    for cls_id in range(num_classes):
+        cls_indices = np.where(np.isin(train_targets_list, cls_id))[0]
+        # cls_indices = train_loader.sampler.indices[cls_indices]
+        cls_sampler = torch.utils.data.SubsetRandomSampler(cls_indices)
+        cls_loader_dict = torch.utils.data.DataLoader(train_loader.dataset,
+                                                      batch_size=args.batch_size,
+                                                      sampler=cls_sampler)
+        if cls_id in args.class_to_replace:
+            continue
+
+        model.eval()
+        for batch, (x, y) in enumerate(cls_loader_dict):
+            with torch.no_grad():
+                x = x.cuda()
+                _ = model(x)
+            n_acts = len(model.in_act.items())
+            print(f"Activations {n_acts}")
+            mat_list = get_representation_matrix(model, batch_list=[args.batch_size]*n_acts)
             break
-        threshold = 0.99
+        threshold = 0.96 + 0.0003 * cls_id
         merged_feat_mat = update_GPM(mat_list, threshold, merged_feat_mat)
         proj_mat = [torch.Tensor(np.dot(layer_basis, layer_basis.transpose())) for layer_basis in merged_feat_mat]
         Proj_mat_lst.append(proj_mat)
 
-    return UNSC_iter(data_loaders, model, criterion, args, mask,
+    device = model.parameters().__next__().device
+    test_model = deepcopy(model).to(device)
+    model.train()
+    for m in model.modules():
+        if isinstance(m, nn.BatchNorm2d) or isinstance(m, nn.BatchNorm1d):
+            m.eval()
+
+    return UNSC_iter(train_loader, model, criterion, args=args, mask=mask,
                      proj_mat_list=Proj_mat_lst, test_model=test_model)

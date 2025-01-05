@@ -104,4 +104,4 @@ def boundary_shrink_iter(
 def boundary_shrink(data_loaders, model: nn.Module, criterion, args, mask=None):
     device = model.parameters().__next__().device
     test_model = copy.deepcopy(model).to(device)
-    return boundary_shrink_iter(data_loaders, model, criterion, args, mask, test_model=test_model)
+    return boundary_shrink_iter(data_loaders, model, criterion, args=args, mask=mask, test_model=test_model)

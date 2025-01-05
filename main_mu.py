@@ -28,13 +28,13 @@ def main():
     num_classes = settings.num_classes_dict[args.dataset]
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    _, _, train_loader = get_dataset_loader(
-        args.dataset,
-        "train",
-        None,
-        batch_size=args.batch_size,
-        shuffle=True,
-    )
+    # _, _, train_loader = get_dataset_loader(
+    #     args.dataset,
+    #     "train",
+    #     None,
+    #     batch_size=args.batch_size,
+    #     shuffle=True,
+    # )
 
     _, _, retain_loader = get_dataset_loader(
         args.dataset,
@@ -88,7 +88,7 @@ def main():
     )
 
     unlearn_data_loaders = OrderedDict(
-        train=train_loader, retain=retain_loader, forget=forget_loader, val=val_loader, test=test_loader
+        retain=retain_loader, forget=forget_loader, val=val_loader, test=test_loader
     )
 
     criterion = nn.CrossEntropyLoss()
