@@ -25,3 +25,6 @@ python nets/mria.py --dataset cifar-100 --model efficientnet_s --forget_ratio 0.
 # SalUn
 # before: 22.88  after: teacher 42.04  student 7.89
 python nets/mria.py --dataset cifar-100 --model efficientnet_s --forget_ratio 0.5 --uni_name SalUn --num_epochs 2 --align_epochs 3 --distill_epochs 5 --learning_rate 5e-5 --lr_student 5e-5 --batch_size 128
+# UNSC
+#
+python nets/mria.py --dataset cifar-100 --model efficientnet_s --forget_ratio 0.5 --uni_name UNSC --num_epochs 2 --align_epochs 3 --distill_epochs 5 --learning_rate 5e-5 --lr_student 5e-5 --batch_size 128

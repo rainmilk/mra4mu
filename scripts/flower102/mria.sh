@@ -23,7 +23,10 @@ python nets/mria.py --dataset flower-102 --model swin_t --st_model resnet18 --fo
 # before:  after: teacher 38.04  student 38.67
 python nets/mria.py --dataset flower-102 --model swin_t --st_model resnet18 --forget_ratio 0.5 --uni_name FT_l1 --num_epochs 3 --align_epochs 2 --distill_epochs 5 --learning_rate 1e-4 --lr_student 2e-4 --batch_size 32
 # GA_l1
-python main_mu.py --dataset flower-102 --model swin_t --forget_ratio 0.5 --alpha 0.2 --unlearn_lr 4e-3 --uni_name GA_l1 --num_epochs 1 --batch_size 64  --print_freq 20
+python nets/mria.py --dataset flower-102 --model swin_t --st_model resnet18 --forget_ratio 0.5 --uni_name GA_l1 --num_epochs 3 --align_epochs 2 --distill_epochs 5 --learning_rate 1e-4 --lr_student 2e-4 --batch_size 32
 # SalUn
 # before: 26.72  after: teacher 87.61  student 83.74
 python nets/mria.py --dataset flower-102 --model swin_t --st_model resnet18 --forget_ratio 0.5 --uni_name SalUn --num_epochs 3 --align_epochs 2 --distill_epochs 5 --learning_rate 1e-4 --lr_student 2e-4 --batch_size 32
+
+# UNSC
+python nets/mria.py --dataset flower-102 --model swin_t --st_model resnet18 --forget_ratio 0.5 --uni_name UNSC --num_epochs 3 --align_epochs 2 --distill_epochs 5 --learning_rate 1e-4 --lr_student 2e-4 --batch_size 32

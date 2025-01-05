@@ -19,3 +19,5 @@ python main_mu.py --dataset cifar-100 --model efficientnet_s --forget_ratio 0.5 
 python main_mu.py --dataset cifar-100 --model efficientnet_s --forget_ratio 0.5 --alpha 1 --unlearn_lr 1e-3 --uni_name SalUn --num_epochs 10  --batch_size 256 --class_to_replace 10 30 50 70 90 --mask_thresh 0.8
 
 python main_mu.py --dataset cifar-100 --model efficientnet_s --forget_ratio 0.5 --alpha 18 --unlearn_lr 1e-3 --uni_name fisher --num_epochs 10  --batch_size 256  --print_freq 20
+
+python main_mu.py --dataset cifar-100 --model efficientnet_s --forget_ratio 0.5 --alpha 1 --unlearn_lr 5e-4 --uni_name UNSC --num_epochs 10 --batch_size 256

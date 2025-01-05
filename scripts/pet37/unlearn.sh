@@ -22,4 +22,4 @@ python main_mu.py --dataset pet-37 --model resnet18 --forget_ratio 0.5 --alpha 1
 #
 # python main_mu.py --dataset pet-37 --model resnet18 --forget_ratio 0.5 --alpha 30 --unlearn_lr 1e-1 --uni_name fisher --num_epochs 10  --batch_size 32
 #
-python main_mu.py --dataset pet-37 --model resnet18 --forget_ratio 0.5 --alpha 1 --unlearn_lr 5e-5 --uni_name UNSC --num_epochs 10 --batch_size 64
+python main_mu.py --dataset pet-37 --model resnet18 --forget_ratio 0.5 --alpha 1 --unlearn_lr 5e-5 --uni_name UNSC --num_epochs 15 --batch_size 64
