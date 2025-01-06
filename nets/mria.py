@@ -225,8 +225,10 @@ def mria_train(args):
         shuffle=True,
     )
 
-    model_test(train_loader, model_ul, device)
     auto_mix = partial(auto_mixup, labels=None, alpha=0.75)
+
+    model_test(forget_loader, model_ul, device)
+    model_test(train_loader, model_ul, device)
 
     # lr_scheduler = None
     # ul_lr_scheduler = None
