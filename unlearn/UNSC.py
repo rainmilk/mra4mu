@@ -17,9 +17,9 @@ def compute_conv_output_size(Lin, kernel_size, stride=1, padding=0, dilation=1):
 def get_representation_matrix(net, batch_list=[24, 100, 100, 125, 125, 125]):
     mat_list = []
     for i, (layer_name, in_act_map) in enumerate(net.in_act.items()):
-        bsz = batch_list[i]
         k = 0
         act = in_act_map.detach().cpu().numpy()
+        bsz = min(batch_list[i], act.shape[0])
         if 'feature' in layer_name:
             ksz = net.ksize[layer_name]
             s = compute_conv_output_size(net.in_map_size[layer_name], ksz)
@@ -103,25 +103,30 @@ def UNSC_iter(data_loaders, model, criterion, optimizer, epoch, args, mask,
     # train_loader = DataLoader(subset, batch_size=args.batch_size, drop_last=True, shuffle=True)
 
     test_model.eval()
-    for ep in range(args.num_epochs):
-        for batch, (x, y) in enumerate(forget_loader):
-            x = x.cuda()
-            y = get_pseudo_label(args, test_model, x)
-            pred_y = model(x)
-            loss = criterion(pred_y, y)
-            optimizer.zero_grad()
-            loss.backward()
-            kk = 0
-            for k, (m, params) in enumerate(model.named_parameters()):
-                if len(params.size()) != 1:
-                    sz = params.grad.data.size(0)
-                    params.grad.data = params.grad.data - torch.mm(params.grad.data.view(sz, -1),
-                                                                   proj_mat_list[0][kk].cuda()).view(params.size())
-                    kk += 1
-                elif len(params.size()) == 1:
-                    params.grad.data.fill_(0)
-            optimizer.step()
-        print('[train] epoch {}, batch {}, loss {}'.format(ep, batch, loss))
+    for batch, (x, y) in enumerate(forget_loader):
+        if batch > args.forget_batch:
+            break
+        x = x.cuda()
+        y = get_pseudo_label(args, test_model, x)
+        pred_y = model(x)
+        loss = criterion(pred_y, y)
+        optimizer.zero_grad()
+        loss.backward()
+        kk = 0
+        for k, (m, params) in enumerate(model.named_parameters()):
+            if len(params.size()) != 1:
+                sz = params.grad.data.size(0)
+                params_mt = params.grad.data.view(sz, -1)
+                proj_mat = proj_mat_list[0][kk].cuda()
+                param_sz = params_mt.size(1)
+                proj_sz = proj_mat.size(0)
+                if param_sz == proj_sz:
+                    params.grad.data = params.grad.data - torch.mm(params_mt, proj_mat).view(params.size())
+                kk += 1
+            elif len(params.size()) == 1:
+                params.grad.data.fill_(0)
+        optimizer.step()
+    print('[train] epoch {}, batch {}, loss {}'.format(epoch, batch, loss))
 
     return loss
 

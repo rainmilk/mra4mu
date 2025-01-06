@@ -62,7 +62,11 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--WF_N", type=float, default=1000, help="N"
+        "--WF_N", type=int, default=1000, help="N"
+    )
+
+    parser.add_argument(
+        "--forget_batch", type=int, default=50, help="How many forget batches are used"
     )
 
     # ----------------------- todo add new argument--------------------------------------------------

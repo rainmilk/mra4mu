@@ -41,7 +41,7 @@ def fisher(data_loaders, model, criterion, args, mask=None):
     forget_loader = data_loaders["forget"]
 
     device = f"cuda:{int(args.gpu)}" if torch.cuda.is_available() else "cpu"
-    fisher_approximation = fisher_information_martix(model, retain_loader, device, args.WF_N)
+    fisher_approximation = fisher_information_martix(model, retain_loader, device, args.forget_batch)
     for i, parameter in enumerate(model.parameters()):
         noise = torch.sqrt(args.alpha / fisher_approximation[i]).clamp(
             max=1e-3

@@ -86,7 +86,12 @@ def execute(args):
 
         show_tsne(ul_embedding, ul_labels)
         show_conf_mt(ul_labels, ul_predicts, forget_cls)
-        show_bars(ul_cls_acc[1], cls_acc[1], forget_cls)
+
+        #MIA
+        re_mia = evals_MIA(labels, probs, forget_cls)
+        ul_mia = evals_MIA(ul_labels, ul_probs, forget_cls)
+
+        show_bars(ul_mia, re_mia, forget_cls)
 
 
 def evals_classification(y_true, y_pred):
@@ -106,12 +111,27 @@ def evals_classification(y_true, y_pred):
     return global_acc.item(), (label_list, eval_results)
 
 
+def evals_MIA(y_true, probs, forget_cls):
+    eval_results = []
+
+    for label in forget_cls:
+        cls_index = y_true == label
+        MIA = np.mean(probs[cls_index][:, label])
+        eval_results.append(MIA)
+
+    return eval_results
+
+
 def show_bars(bar_data_front, bar_data_back, forget_cls):
     x_labels = [f"C{y}" for y in forget_cls]
-    df = pd.DataFrame({"Accuracy": bar_data_back, "Forget Classes": x_labels})
-    sn.barplot(df, x="Forget Classes", y="Accuracy", color="blue")
-    df = pd.DataFrame({"Accuracy": bar_data_front, "Forget Classes": x_labels})
-    sn.barplot(df, x="Forget Classes", y="Accuracy", color="red")
+    df1 = pd.DataFrame({"Type": "UL", "MIA": bar_data_front, "Forget Classes": x_labels})
+    df2 = pd.DataFrame({"Type": "RS", "MIA": bar_data_back, "Forget Classes": x_labels})
+    df = pd.concat([df1, df2], axis=0)
+    ax = sn.barplot(df, x="Forget Classes", y="MIA", hue="Type")
+    ax.bar_label(ax.containers[0], fontsize=10, fmt="%.2f")
+    ax.bar_label(ax.containers[1], fontsize=10, fmt="%.2f")
+    # df = pd.DataFrame({"Accuracy": bar_data_front, "Forget Classes": x_labels})
+    # sn.barplot(df, x="Forget Classes", y="Accuracy", color="red")
     plt.show()
 
 

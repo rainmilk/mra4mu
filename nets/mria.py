@@ -168,6 +168,10 @@ def mria_train(args):
         args.dataset, case, args.model, model_suffix=student_suffix, unique_name=uni_name,
     )
 
+    model_distill_path = settings.get_ckpt_path(
+        args.dataset, case, args.model, model_suffix="distill", unique_name=uni_name,
+    )
+
     st_model = args.st_model if args.st_model else args.model
     model_student = load_custom_model(st_model, num_classes)
     model_student = ClassifierWrapper(model_student, num_classes)
@@ -236,6 +240,11 @@ def mria_train(args):
         if lr_scheduler:
             lr_scheduler.step(i)
 
+        # Save distillation model
+        if update_teacher and i == (num_epochs - 1):
+            state = model_student.state_dict()
+            torch.save(state, model_distill_path)
+
         # Alignment Stage
         top_conf = args.top_conf
         iters = 5
@@ -251,6 +260,7 @@ def mria_train(args):
                                                     infer_probs, train_probs)
 
             if update_teacher:
+                print(f"Updating teacher model...")
                 model_train(
                     conf_data_loader,
                     model_teacher,
@@ -266,6 +276,7 @@ def mria_train(args):
             train_predicts, train_probs = model_forward(train_loader, model_teacher)
             conf_data_loader = get_conf_data_loader(train_data, num_classes, top_conf,
                                                     train_probs, infer_probs)
+            print(f"Updating student model...")
             model_train(
                 conf_data_loader,
                 model_student,
