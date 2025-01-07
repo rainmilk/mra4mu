@@ -166,11 +166,11 @@ def mria_train(args):
     student_suffix = "distill"
     if args.align_epochs > 0:
         student_suffix = "student" if update_teacher else "student_only"
-    model_student_path = settings.get_ckpt_path(
-        args.dataset, case, args.model, model_suffix=student_suffix, unique_name=uni_name,
-    )
 
     st_model = args.st_model if args.st_model else args.model
+    model_student_path = settings.get_ckpt_path(
+        args.dataset, case, st_model, model_suffix=student_suffix, unique_name=uni_name,
+    )
     model_student = load_custom_model(st_model, num_classes)
     model_student = ClassifierWrapper(model_student, num_classes)
     optimizer, lr_scheduler = create_optimizer_scheduler(
