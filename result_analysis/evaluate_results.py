@@ -1,4 +1,5 @@
 import argparse
+import os
 
 import torch
 import numpy as np
@@ -17,7 +18,12 @@ def execute(args):
     num_classes = settings.num_classes_dict[args.dataset]
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    loaded_model = load_custom_model(args.model, num_classes, load_pretrained=False)
+    # todo flowers-102 student_only
+    if args.dataset == 'flower-102' and args.model_suffix == 'student_only':
+        loaded_model = load_custom_model('resnet18', num_classes, load_pretrained=False)
+    else:
+        loaded_model = load_custom_model(args.model, num_classes, load_pretrained=False)
+
     model = ClassifierWrapper(loaded_model, num_classes)
     model.to(device)
 
@@ -72,6 +78,16 @@ def execute(args):
         # n_results, n_embedding = evals(forget_cls_loader, model)
         # # print("Results: %.4f" % results)
         # print("Results: ", n_results)
+
+        # save results
+        root_dir = settings.root_dir
+        result_dir = os.path.join(root_dir, 'results', args.dataset, case, args.uni_name, )
+        os.makedirs(result_dir, exist_ok=True)
+        forget_file = args.model+'_'+args.model_suffix+'_forget.npy'
+        global_file = args.model+'_'+args.model_suffix+'_global.npy'
+
+        np.save(os.path.join(result_dir, forget_file), n_results)
+        np.save(os.path.join(result_dir, global_file), results)
 
 
 def evals(data_loader, model, device="cuda", args=None):
