@@ -26,7 +26,7 @@ python nets/mria.py --dataset cifar-10 --model efficientnet_s --forget_ratio 0.5
 # before: 28.09  after: teacher 28.09  student 40.59
 python nets/mria.py --dataset cifar-10 --model efficientnet_s --forget_ratio 0.5 --uni_name SalUn --num_epochs 1 --align_epochs 3 --distill_epochs 5 --learning_rate 5e-5 --lr_student 5e-5 --no_t_update --batch_size 256
 # fisher
-# before: 38.86  after: teacher 38.86  student 40.58
+# before: 15.19  after: teacher 15.19  student 17.97
 python nets/mria.py --dataset cifar-10 --model efficientnet_s --forget_ratio 0.5 --uni_name fisher --num_epochs 1 --align_epochs 3 --distill_epochs 5 --learning_rate 5e-5 --lr_student 5e-5 --no_t_update --batch_size 256
 # GA_l1
 # before: 28.62  after: teacher 28.62  student 31.11

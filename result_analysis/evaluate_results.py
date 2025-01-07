@@ -19,7 +19,7 @@ def execute(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # todo flowers-102 student_only
-    if args.dataset == 'flower-102' and args.model_suffix == 'student_only':
+    if args.dataset == 'flower-102' and args.model_suffix in ['student_only', 'distill']:
         loaded_model = load_custom_model('resnet18', num_classes, load_pretrained=False)
     else:
         loaded_model = load_custom_model(args.model, num_classes, load_pretrained=False)

@@ -163,13 +163,11 @@ def mria_train(args):
         args.dataset, case, args.model, model_suffix="restore", unique_name=uni_name,
     )
 
-    student_suffix = "student" if update_teacher else "student_only"
+    student_suffix = "distill"
+    if args.align_epochs > 0:
+        student_suffix = "student" if update_teacher else "student_only"
     model_student_path = settings.get_ckpt_path(
         args.dataset, case, args.model, model_suffix=student_suffix, unique_name=uni_name,
-    )
-
-    model_distill_path = settings.get_ckpt_path(
-        args.dataset, case, args.model, model_suffix="distill", unique_name=uni_name,
     )
 
     st_model = args.st_model if args.st_model else args.model
@@ -184,18 +182,18 @@ def mria_train(args):
     )
 
     backbone = load_custom_model(args.model, num_classes, load_pretrained=False)
-    model_ul = ClassifierWrapper(backbone, num_classes)
+    model_teacher = ClassifierWrapper(backbone, num_classes)
     checkpoint = torch.load(ul_model_path)
-    model_ul.load_state_dict(checkpoint, strict=False)
-    ul_optimizer, ul_lr_scheduler = create_optimizer_scheduler(
+    model_teacher.load_state_dict(checkpoint, strict=False)
+    t_optimizer, t_lr_scheduler = create_optimizer_scheduler(
         optimizer_type,
-        model_ul.parameters(),
+        model_teacher.parameters(),
         num_epochs,
         learning_rate,
         weight_decay,
     )
 
-    model_ul.to(device=device)
+    model_teacher.to(device=device)
     model_student.to(device=device)
     # switch to train mode
 
@@ -227,33 +225,27 @@ def mria_train(args):
 
     auto_mix = partial(auto_mixup, labels=None, alpha=0.2)
 
-    model_test(forget_loader, model_ul, device)
-    model_test(train_loader, model_ul, device)
+    model_test(forget_loader, model_teacher, device)
+    model_test(train_loader, model_teacher, device)
 
     # lr_scheduler = None
     # ul_lr_scheduler = None
-    for i in tqdm(range(num_epochs), desc="MRIA"):
+    for ep in tqdm(range(num_epochs), desc="MRIA"):
         # Distillation Stage
-        print(f"MRIA Epoch {i}: Distillation Stage")
+        print(f"MRIA Epoch {ep}: Distillation Stage")
         for epoch in range(args.distill_epochs):
-            model_distill(model_ul, model_student, epoch, data_loader,
+            model_distill(model_teacher, model_student, epoch, data_loader,
                           auto_mix, loss_fn, optimizer, device)
             model_test(forget_loader, model_student, device)
         if lr_scheduler:
-            lr_scheduler.step(i)
-
-        # Save distillation model
-        if update_teacher and i == (num_epochs - 1):
-            state = model_student.state_dict()
-            torch.save(state, model_distill_path)
+            lr_scheduler.step(ep)
 
         # Alignment Stage
         top_conf = args.top_conf
         iters = 5
 
-        print(f"MRIA Epoch {i}: Alignment Stage")
+        print(f"MRIA Epoch {ep}: Alignment Stage")
 
-        model_teacher = model_ul
         train_predicts, train_probs = model_forward(train_loader, model_teacher)
         for _ in range(args.align_epochs):
             # train_predicts, train_probs = model_forward(train_loader, model_teacher)
@@ -266,8 +258,8 @@ def mria_train(args):
                 model_train(
                     conf_data_loader,
                     model_teacher,
-                    ul_optimizer,
-                    ul_lr_scheduler,
+                    t_optimizer,
+                    t_lr_scheduler,
                     loss_fn,
                     iters,
                     args,
@@ -292,9 +284,9 @@ def mria_train(args):
             model_test(forget_loader, model_student, device)
 
     print("Teacher Model Performance:")
-    model_test(train_loader, model_ul, device)
+    model_test(train_loader, model_teacher, device)
     if update_teacher:
-        state = model_ul.state_dict()
+        state = model_teacher.state_dict()
         torch.save(state, model_save_path)
 
     print("Student Model Performance:")
@@ -302,7 +294,7 @@ def mria_train(args):
     state = model_student.state_dict()
     torch.save(state, model_student_path)
 
-    return model_ul, model_student
+    return model_teacher, model_student
 
 
 if __name__ == "__main__":
