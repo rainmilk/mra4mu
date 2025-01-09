@@ -35,13 +35,13 @@ def execute(args):
         shuffle=False,
     )
 
-    # _, _, forget_cls_loader = get_dataset_loader(
-    #     args.dataset,
-    #     "forget_cls",
-    #     case,
-    #     batch_size=args.batch_size,
-    #     shuffle=False,
-    # )
+    _, _, test_loader = get_dataset_loader(
+        args.dataset,
+        "test",
+        None,
+        batch_size=args.batch_size,
+        shuffle=False,
+    )
 
     _, _, forget_loader = get_dataset_loader(
         args.dataset,
@@ -67,26 +67,30 @@ def execute(args):
         model.eval()
 
         print(f"Evaluating prediction dataset:")
-        results, embedding = evals(pred_loader, model, device, args)
+        results, _ = evals(pred_loader, model, device, args)
         # print("Results: %.4f" % results)
         print("Results: ", results)
+
         print(f"Evaluating forget dataset:")
-        n_results, n_embedding = evals(forget_loader, model, device, args)
+        f_results, _ = evals(forget_loader, model, device, args)
         # print("Results: %.4f" % results)
-        print("Results: ", n_results)
-        # print(f"Evaluating forget class dataset:")
-        # n_results, n_embedding = evals(forget_cls_loader, model)
-        # # print("Results: %.4f" % results)
-        # print("Results: ", n_results)
+        print("Results: ", f_results)
+
+        print(f"Evaluating test dataset:")
+        t_results, _ = evals(test_loader, model)
+        # print("Results: %.4f" % results)
+        print("Results: ", t_results)
 
         # save results
         root_dir = settings.root_dir
         result_dir = os.path.join(root_dir, 'results', args.dataset, case, args.uni_name, )
         os.makedirs(result_dir, exist_ok=True)
+        test_file = args.model + '_' + args.model_suffix + '_test.npy'
         forget_file = args.model+'_'+args.model_suffix+'_forget.npy'
         global_file = args.model+'_'+args.model_suffix+'_global.npy'
 
-        np.save(os.path.join(result_dir, forget_file), n_results)
+        np.save(os.path.join(result_dir, test_file), t_results)
+        np.save(os.path.join(result_dir, forget_file), f_results)
         np.save(os.path.join(result_dir, global_file), results)
 
 

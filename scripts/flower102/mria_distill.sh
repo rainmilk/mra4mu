@@ -12,25 +12,25 @@ echo "PYTHONPATH is set to: $PYTHONPATH"
 # python nets/mria.py --dataset flower-102 --model swin_t --st_model resnet18 --forget_ratio 0.5 --uni_name FT_l1 --num_epochs 1 --align_epochs 0 --distill_epochs 10 --learning_rate 1e-4  --lr_student 2e-4 --no_t_update --batch_size 32
 
 # RL
-# before: 63.77   after: teacher 63.77  student 62.35
+# before: 63.77   after: teacher 63.77  student 61.88
 python nets/mria.py --dataset flower-102 --model swin_t --st_model resnet18 --forget_ratio 0.5 --uni_name RL --num_epochs 1 --align_epochs 0 --distill_epochs 10 --learning_rate 1e-4  --lr_student 2e-4 --no_t_update --batch_size 32
 # GA
-# before: 29.91  after: teacher 29.91  student 29.91
+# before: 29.91  after: teacher 29.91  student 30.62
 python nets/mria.py --dataset flower-102 --model swin_t --st_model resnet18 --forget_ratio 0.5 --uni_name GA --num_epochs 1 --align_epochs 0 --distill_epochs 10 --learning_rate 1e-4  --lr_student 2e-4 --no_t_update --batch_size 32
 # IU
-# before: 46.88  after: teacher 46.88  student 49.49
+# before: 46.88  after: teacher 46.88  student 47.91
 python nets/mria.py --dataset flower-102 --model swin_t --st_model resnet18 --forget_ratio 0.5 --uni_name IU --num_epochs 1 --align_epochs 0 --distill_epochs 10 --learning_rate 1e-4  --lr_student 2e-4 --no_t_update --batch_size 32
 # BU
-# before: 63.46   after: teacher 63.46  student 64.09
+# before: 63.46   after: teacher 63.46  student 64.96
 python nets/mria.py --dataset flower-102 --model swin_t --st_model resnet18 --forget_ratio 0.5 --uni_name BU --num_epochs 1 --align_epochs 0 --distill_epochs 10 --learning_rate 1e-4  --lr_student 2e-4 --no_t_update --batch_size 32
 # SalUn
-# before: 45.15  after: teacher 45.15  student 44.99
+# before: 45.15  after: teacher 45.15  student 46.25
 python nets/mria.py --dataset flower-102 --model swin_t --st_model resnet18 --forget_ratio 0.5 --uni_name SalUn --num_epochs 1 --align_epochs 0 --distill_epochs 10 --learning_rate 1e-4  --lr_student 2e-4 --no_t_update --batch_size 32
 # fisher
-# before: 28.26  after: teacher 28.26  student 28.49
+# before: 28.26  after: teacher 28.26  student 26.6
 python nets/mria.py --dataset flower-102 --model swin_t --st_model resnet18 --forget_ratio 0.5 --uni_name fisher --num_epochs 1 --align_epochs 0 --distill_epochs 10 --learning_rate 1e-4  --lr_student 2e-4 --no_t_update --batch_size 32
 # GA_l1
-# before: 49.01  after: teacher 49.01  student 47.67
+# before: 49.01  after: teacher 49.01  student 47.83
 python nets/mria.py --dataset flower-102 --model swin_t --st_model resnet18 --forget_ratio 0.5 --uni_name GA_l1 --num_epochs 1 --align_epochs 0 --distill_epochs 10 --learning_rate 1e-4  --lr_student 2e-4 --no_t_update --batch_size 32
 # UNSC
 # before:   after: teacher   student
