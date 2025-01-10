@@ -27,6 +27,10 @@ def execute():
             ratio_dir = os.path.join(data_dir, forget_ratio)
             uni_names = os.listdir(ratio_dir)
             for uni_name in uni_names:
+                global_result_dict[dataset][forget_ratio][uni_name] = {}
+                forget_result_dict[dataset][forget_ratio][uni_name] = {}
+                test_result_dict[dataset][forget_ratio][uni_name] = {}
+
                 uni_dir = os.path.join(ratio_dir, uni_name)
                 result_files = os.listdir(uni_dir)
                 for result_file in result_files:
@@ -35,36 +39,34 @@ def execute():
                     result = np.load(result_file_path, allow_pickle=True)
 
                     result_type = result_file.split('_')[-2]
-                    if result_type not in global_result_dict[dataset][forget_ratio].keys():
-                        global_result_dict[dataset][forget_ratio][result_type] = {}
-                    if uni_name not in global_result_dict[dataset][forget_ratio][result_type].keys():
-                        global_result_dict[dataset][forget_ratio][result_type][uni_name] = {}
+                    if result_type not in global_result_dict[dataset][forget_ratio][uni_name].keys():
+                        global_result_dict[dataset][forget_ratio][uni_name][result_type] = {}
 
-                    if result_type not in forget_result_dict[dataset][forget_ratio].keys():
-                        forget_result_dict[dataset][forget_ratio][result_type] = {}
-                    if uni_name not in forget_result_dict[dataset][forget_ratio][result_type].keys():
-                        forget_result_dict[dataset][forget_ratio][result_type][uni_name] = {}
+                    if result_type not in forget_result_dict[dataset][forget_ratio][uni_name].keys():
+                        forget_result_dict[dataset][forget_ratio][uni_name][result_type] = {}
 
-                    if result_type not in test_result_dict[dataset][forget_ratio].keys():
-                        test_result_dict[dataset][forget_ratio][result_type] = {}
-                    if uni_name not in test_result_dict[dataset][forget_ratio][result_type].keys():
-                        test_result_dict[dataset][forget_ratio][result_type][uni_name] = {}
+                    if result_type not in test_result_dict[dataset][forget_ratio][uni_name].keys():
+                        test_result_dict[dataset][forget_ratio][uni_name][result_type] = {}
 
                     if '_global.npy' in result_file_path:
-                        global_result_dict[dataset][forget_ratio][result_type][uni_name] = result
+                        global_result_dict[dataset][forget_ratio][uni_name][result_type] = result.item()['global']
                     if '_forget.npy' in result_file_path:
-                        forget_result_dict[dataset][forget_ratio][result_type][uni_name] = result
+                        forget_result_dict[dataset][forget_ratio][uni_name][result_type] = result.item()['global']
                     if '_test.npy' in result_file_path:
-                        test_result_dict[dataset][forget_ratio][result_type][uni_name] = result
+                        test_result_dict[dataset][forget_ratio][uni_name][result_type] = result.item()['global']
 
         csv_dir = os.path.join(settings.root_dir, 'results_csv')
         os.makedirs(csv_dir, exist_ok=True)
+
+        new_order_index = ['fisher', 'RL', 'GA', 'IU', 'BU', 'GA_l1', 'SalUn', 'UNSC']
+        new_order_header = ['ul', 'restore', 'only', 'distill']
 
         # save df global
         for dataset in global_result_dict.keys():
             for forget_ratio in global_result_dict[dataset].keys():
                 df = pd.DataFrame(global_result_dict[dataset][forget_ratio])
                 csv_path = os.path.join(csv_dir, 'result_%s_%s_global.csv' % (dataset, forget_ratio))
+                df = df.reindex(new_order_header, columns=new_order_index)
                 df.to_csv(csv_path, index=True, header=True)
 
         # save df forget
@@ -72,6 +74,7 @@ def execute():
             for forget_ratio in forget_result_dict[dataset].keys():
                 df = pd.DataFrame(forget_result_dict[dataset][forget_ratio])
                 csv_path = os.path.join(csv_dir, 'result_%s_%s_forget.csv' % (dataset, forget_ratio))
+                df = df.reindex(new_order_header, columns=new_order_index)
                 df.to_csv(csv_path, index=True, header=True)
 
         # save df test
@@ -79,6 +82,7 @@ def execute():
             for forget_ratio in test_result_dict[dataset].keys():
                 df = pd.DataFrame(test_result_dict[dataset][forget_ratio])
                 csv_path = os.path.join(csv_dir, 'result_%s_%s_test.csv' % (dataset, forget_ratio))
+                df = df.reindex(new_order_header, columns=new_order_index)
                 df.to_csv(csv_path, index=True, header=True)
 
 
