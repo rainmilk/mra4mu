@@ -49,26 +49,20 @@ def auto_mixup(images, labels=None, alpha=0.75):
     return mixed_img if labels is None else (mixed_img, mixed_labels)
 
 
-def mixup_img(images1, images2, alpha=0.75):
-    nb_images = len(images1)
-
+def mixup_label(label1, label2, alpha=0.75, device='cuda'):
+    nb_labels = len(label1)
     beta_dist = torch.distributions.beta.Beta(alpha, alpha)
-    lbd = beta_dist.sample(sample_shape=(nb_images,))
-    idx = lbd < 0.5
-    lbd[idx] = 1 - lbd[idx]
-    rnd_idx = torch.randint(low=0, high=len(images2), size=(nb_images,))
-    lbd_img = lbd.reshape((-1, 1, 1, 1))
-    mixed_img = lbd_img * images1 + (1 - lbd_img) * images2[rnd_idx]
-
-    return mixed_img
+    lbd = beta_dist.sample(sample_shape=(nb_labels, 1)).to(device)
+    mixed_labels = lbd * label1 + (1 - lbd) * label2
+    return mixed_labels
 
 
-def mixup(images1, labels1, images2, labels2, alpha=0.75):
+def mixup(images1, labels1, images2, labels2, alpha=0.75, device='cuda'):
     nb_images = len(images1)
     beta_dist = torch.distributions.beta.Beta(alpha, alpha)
-    lbd = beta_dist.sample(sample_shape=(nb_images,))
-    idx = lbd < 0.5
-    lbd[idx] = 1 - lbd[idx]
+    lbd = beta_dist.sample(sample_shape=(nb_images,)).to(device)
+    # idx = lbd < 0.5
+    # lbd[idx] = 1 - lbd[idx]
     rnd_idx = torch.randint(low=0, high=len(images2), size=(nb_images,))
     lbd_img = lbd.reshape((-1,1,1,1))
     mixed_img = lbd_img * images1 + (1 - lbd_img) * images2[rnd_idx]
@@ -100,7 +94,7 @@ def mix_up_dataloader(
 
 
 def model_distill(model_teacher, model_student, epoch, data_loader,
-                  transforms, criterion, optimizer, device):
+                  transforms, criterion, optimizer, need_mixup, device):
     with tqdm(total=len(data_loader), desc=f"Epoch {epoch + 1} Distillation") as pbar:
         model_teacher.eval()
         model_student.train()
@@ -108,14 +102,16 @@ def model_distill(model_teacher, model_student, epoch, data_loader,
             # predictions on data augmentation
             img_aug = transforms(image).to(device)
             # image_mixup = auto_mixup(image, None, alpha=0.75, device=device)
-            pred_ul = model_teacher(img_aug)
-            pred_ul = F.softmax(pred_ul, dim=1)
+            pred_t = model_teacher(img_aug)
+            pred_t = F.softmax(pred_t, dim=1)
 
             pred_infer = model_student(img_aug)
-            # pred_ul = (pred_ul + F.softmax(pred_infer, dim=1))/2
+            if need_mixup:
+                pred_st = F.softmax(pred_infer, dim=1)
+                pred_t = mixup_label(pred_st, pred_t, alpha=0.75, device=device)
 
             optimizer.zero_grad()
-            loss = criterion(pred_infer, pred_ul)
+            loss = criterion(pred_infer, pred_t)
             loss.backward()
             optimizer.step()
 
@@ -163,8 +159,10 @@ def mria_train(args):
         args.dataset, case, args.model, model_suffix="restore", unique_name=uni_name,
     )
 
-    student_suffix = "distill"
-    if args.align_epochs > 0:
+    distill_only = args.align_epochs < 1
+    if distill_only:
+        student_suffix = "distill"
+    else:
         student_suffix = "student" if update_teacher else "student_only"
 
     st_model = args.st_model if args.st_model else args.model
@@ -207,6 +205,14 @@ def mria_train(args):
         shuffle=False,
     )
 
+    _, _, test_loader = get_dataset_loader(
+        args.dataset,
+        ["test"],
+        [None],
+        batch_size=args.batch_size,
+        shuffle=False,
+    )
+
     _, _, forget_loader = get_dataset_loader(
         args.dataset,
         ["forget"],
@@ -226,7 +232,7 @@ def mria_train(args):
     auto_mix = partial(auto_mixup, labels=None, alpha=0.2)
 
     model_test(forget_loader, model_teacher, device)
-    model_test(train_loader, model_teacher, device)
+    model_test(test_loader, model_teacher, device)
 
     # lr_scheduler = None
     # ul_lr_scheduler = None
@@ -234,8 +240,9 @@ def mria_train(args):
         # Distillation Stage
         print(f"MRIA Epoch {ep}: Distillation Stage")
         for epoch in range(args.distill_epochs):
+            need_mixup = (not distill_only) and (ep > 0)
             model_distill(model_teacher, model_student, epoch, data_loader,
-                          auto_mix, loss_fn, optimizer, device)
+                          auto_mix, loss_fn, optimizer, need_mixup, device)
             model_test(forget_loader, model_student, device)
         if lr_scheduler:
             lr_scheduler.step(ep)
@@ -284,13 +291,13 @@ def mria_train(args):
             model_test(forget_loader, model_student, device)
 
     print("Teacher Model Performance:")
-    model_test(train_loader, model_teacher, device)
+    model_test(test_loader, model_teacher, device)
     if update_teacher:
         state = model_teacher.state_dict()
         torch.save(state, model_save_path)
 
     print("Student Model Performance:")
-    model_test(train_loader, model_student, device)
+    model_test(test_loader, model_student, device)
     state = model_student.state_dict()
     torch.save(state, model_student_path)
 

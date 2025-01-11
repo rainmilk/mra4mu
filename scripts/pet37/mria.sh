@@ -27,7 +27,7 @@ python nets/mria.py --dataset pet-37 --model resnet18 --forget_ratio 0.5 --uni_n
 # before: 66.9   after: teacher 86.35  student 87.17
 python nets/mria.py --dataset pet-37 --model resnet18 --forget_ratio 0.5 --uni_name SalUn --num_epochs 2 --align_epochs 3 --distill_epochs 5 --learning_rate 2e-4 --lr_student 2e-4 --batch_size 64
 # fisher
-# before: 25.49  after: teacher 74.59  student 74.84
+# before: 25.49  after: teacher 77.41  student 72.83
 python nets/mria.py --dataset pet-37 --model resnet18 --forget_ratio 0.5 --uni_name fisher --num_epochs 2 --align_epochs 3 --distill_epochs 5 --learning_rate 2e-4 --lr_student 2e-4 --batch_size 64
 # GA_l1
 # before: 70.5   after: teacher 84.38  student 84.15

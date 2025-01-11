@@ -62,8 +62,8 @@ def main():
 
     _, _, val_loader = get_dataset_loader(
         args.dataset,
-        ["test", "forget"],
-        [None, case],
+        ["test"],
+        [None],
         batch_size=args.batch_size,
         shuffle=False,
     )

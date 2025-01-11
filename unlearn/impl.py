@@ -116,9 +116,11 @@ def _iterative_unlearn_impl(unlearn_iter_func):
             scheduler.step()
 
             test_loader = data_loaders["test"]
+            val_loader = data_loaders["val"]
             if test_loader is not None:
                 eval_results = model_test(test_loader, model)
                 model_history.append(eval_results)
+                model_test(val_loader, model)
 
             print("one epoch duration:{}".format(time.time() - start_time))
 

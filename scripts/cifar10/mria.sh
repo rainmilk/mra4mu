@@ -15,8 +15,8 @@ echo "PYTHONPATH is set to: $PYTHONPATH"
 # before: 25.76  after: teacher 38.34   student 45.17
 python nets/mria.py --dataset cifar-10 --model efficientnet_s --forget_ratio 0.5 --uni_name RL --num_epochs 2 --align_epochs 3 --distill_epochs 8 --learning_rate 5e-5 --lr_student 1e-4 --batch_size 256
 # GA
-# before: 37.27  after: teacher 40.48  student 39.56
-python nets/mria.py --dataset cifar-10 --model efficientnet_s --forget_ratio 0.5 --uni_name GA --num_epochs 2 --align_epochs 3 --distill_epochs 8 --learning_rate 5e-5 --lr_student 1e-4 --batch_size 256
+# before: 37.27  after: teacher 54.64  student 51.03
+python nets/mria.py --dataset cifar-10 --model efficientnet_s --forget_ratio 0.5 --uni_name GA --num_epochs 2 --align_epochs 3 --distill_epochs 8 --learning_rate 4e-4 --lr_student 4e-4 --batch_size 256
 # IU
 # before: 9.69   after: teacher 80.48    student 56.63
 python nets/mria.py --dataset cifar-10 --model efficientnet_s --forget_ratio 0.5 --uni_name IU --num_epochs 2 --align_epochs 3 --distill_epochs 8 --learning_rate 5e-5 --lr_student 1e-4 --batch_size 256
@@ -30,8 +30,8 @@ python nets/mria.py --dataset cifar-10 --model efficientnet_s --forget_ratio 0.5
 # before: 15.19  after: teacher 69.54   student 61.24
 python nets/mria.py --dataset cifar-10 --model efficientnet_s --forget_ratio 0.5 --uni_name fisher --num_epochs 2 --align_epochs 3 --distill_epochs 8 --learning_rate 5e-5 --lr_student 1e-4 --batch_size 256
 # GA_l1
-# before: 28.62  after: teacher 35.08   student 34.75
-python nets/mria.py --dataset cifar-10 --model efficientnet_s --forget_ratio 0.5 --uni_name GA_l1 --num_epochs 2 --align_epochs 3 --distill_epochs 8 --learning_rate 5e-5 --lr_student 1e-4 --batch_size 256
+# before: 28.62  after: teacher 43.28   student 42.3
+python nets/mria.py --dataset cifar-10 --model efficientnet_s --forget_ratio 0.5 --uni_name GA_l1 --num_epochs 2 --align_epochs 3 --distill_epochs 8 --learning_rate 4e-4 --lr_student 4e-4 --batch_size 256
 # UNSC
 # before: 10.29  after: teacher 80.87   student 59.61
 python nets/mria.py --dataset cifar-10 --model efficientnet_s --forget_ratio 0.5 --uni_name UNSC --num_epochs 2 --align_epochs 3 --distill_epochs 8 --learning_rate 5e-5 --lr_student 1e-4 --batch_size 256

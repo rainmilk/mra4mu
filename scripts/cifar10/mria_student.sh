@@ -14,11 +14,13 @@ echo "PYTHONPATH is set to: $PYTHONPATH"
 # before: 25.76  after: teacher 25.76   student 31.12
 python nets/mria.py --dataset cifar-10 --model efficientnet_s --forget_ratio 0.5 --uni_name RL --num_epochs 1 --align_epochs 3 --distill_epochs 5 --learning_rate 5e-5 --lr_student 5e-5 --no_t_update --batch_size 256
 # GA
-# before: 37.27  after: teacher 37.27   student 30.85
-python nets/mria.py --dataset cifar-10 --model efficientnet_s --forget_ratio 0.5 --uni_name GA --num_epochs 1 --align_epochs 3 --distill_epochs 5 --learning_rate 5e-5 --lr_student 5e-5 --no_t_update --batch_size 256
+# before: 26.72  after: 37.99 (forget_acc)
+# before: 50.45  after: teacher 50.45   student 51.97 (test_acc)
+python nets/mria.py --dataset cifar-10 --model efficientnet_s --forget_ratio 0.5 --uni_name GA --num_epochs 3 --align_epochs 3 --distill_epochs 3 --learning_rate 5e-5 --lr_student 5e-5 --no_t_update --batch_size 256 --top_conf 0.5
 # IU
-# before: 9.69   after: teacher 9.69    student 14.2
-python nets/mria.py --dataset cifar-10 --model efficientnet_s --forget_ratio 0.5 --uni_name IU --num_epochs 1 --align_epochs 3 --distill_epochs 5 --learning_rate 5e-5 --lr_student 5e-5 --no_t_update --batch_size 256
+# before: 9.05   after: 9.36  (forget_acc)
+# before: 10.5   after: teacher 10.5    student 11.79 (test_acc)
+python nets/mria.py --dataset cifar-10 --model efficientnet_s --forget_ratio 0.5 --uni_name IU --num_epochs 4 --align_epochs 6 --distill_epochs 5 --learning_rate 5e-5 --lr_student 5e-5 --no_t_update --batch_size 256
 # BU
 # before: 25.12  after: teacher 25.12   student 30.76
 python nets/mria.py --dataset cifar-10 --model efficientnet_s --forget_ratio 0.5 --uni_name BU --num_epochs 1 --align_epochs 3 --distill_epochs 5 --learning_rate 5e-5 --lr_student 5e-5 --no_t_update --batch_size 256
