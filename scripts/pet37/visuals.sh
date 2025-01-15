@@ -2,4 +2,9 @@
 export PYTHONPATH=$(pwd)
 echo "PYTHONPATH is set to: $PYTHONPATH"
 
-python result_analysis/visual_results.py --dataset pet-37 --model resnet18 --forget_ratio 0.5 --uni_name GA --model_suffix student --batch_size 64
+# RL
+python result_analysis/visual_results.py --dataset pet-37 --model resnet18 --forget_ratio 0.5 --uni_name RL --model_suffix restore --batch_size 64
+python result_analysis/visual_results.py --dataset pet-37 --model resnet18 --forget_ratio 0.5 --uni_name RL --model_suffix student_only --batch_size 64
+# GA
+python result_analysis/visual_results.py --dataset pet-37 --model resnet18 --forget_ratio 0.5 --uni_name GA --model_suffix restore --batch_size 64
+python result_analysis/visual_results.py --dataset pet-37 --model resnet18 --forget_ratio 0.5 --uni_name GA --model_suffix student_only --batch_size 64

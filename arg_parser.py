@@ -393,6 +393,12 @@ def parse_args():
         help="No update teacher",
     )
 
+    parser.add_argument(
+        "--fig_title",
+        type=str,
+        default=None,
+        help="Figure title",
+    )
 
     parser.add_argument("--test_it", default=2, type=int, help="test iterations")
 

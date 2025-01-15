@@ -53,17 +53,13 @@ def get_ckpt_path(dataset, case, model, model_suffix, step=None, unique_name=Non
     return os.path.join(path, f"{model}_{model_suffix}.pth")
 
 
-def get_visual_result_path(dataset, case, model, suffix, step=None, unique_name=None):
+def get_visual_result_path(dataset, case, unique_name, model, model_suffix, type_name):
     """Generate and return model paths dynamically."""
     path = os.path.join(root_dir, "result_visual", dataset)
     if case is not None:
         path = os.path.join(path, case)
-    if step is not None and step >= 0:
-        path = os.path.join(path, f"step_{step}")
-    if unique_name is not None:
-        path = os.path.join(path, unique_name)
 
-    return os.path.join(path, f"{model}_{suffix}.pdf")
+    return os.path.join(path, f"{unique_name}_{model}_{model_suffix}_{type_name}.pdf")
 
 
 # get ckpt files for sensitivity experiment models
