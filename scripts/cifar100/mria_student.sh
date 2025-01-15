@@ -1,39 +1,37 @@
 # $env:PYTHONPATH += ($pwd).Path  # Powershell
 export PYTHONPATH=$(pwd)
 echo "PYTHONPATH is set to: $PYTHONPATH"
-
-# FT, RL, GA, IU, BU, L1, SalUn
-
-# FT
-# before: 20.72  after: teacher 46.45  student 11.36
-# python nets/mria.py --dataset cifar-100 --model efficientnet_s --forget_ratio 0.5 --uni_name FT --num_epochs 1 --align_epochs 3 --distill_epochs 5 --learning_rate 5e-5 --lr_student 5e-5 --no_t_update --batch_size 128
-# FT_l1
-# before: 27.12  after: teacher 47.96  student 15.08
-# python nets/mria.py --dataset cifar-100 --model efficientnet_s --forget_ratio 0.5 --uni_name FT_l1 --num_epochs 1 --align_epochs 3 --distill_epochs 5 --learning_rate 5e-5  --lr_student 5e-5 --no_t_update --batch_size 128
+# RL, GA, IU, BU, L1, SalUn, GA_l1, UNSC
 
 # RL
-# before: 53.66  after: teacher 53.66  student 58.44
-python nets/mria.py --dataset cifar-100 --model efficientnet_s --forget_ratio 0.5 --uni_name RL --num_epochs 4 --align_epochs 8 --distill_epochs 5 --learning_rate 5e-5  --lr_student 2e-4 --no_t_update --batch_size 256
-# GA todo
-# before: 20.08  after: 24.40 (forget_acc)
-# before: 53.12  after: teacher 53.12   student 55.37  (test_acc)
-python nets/mria.py --dataset cifar-100 --model efficientnet_s --forget_ratio 0.5 --uni_name GA --num_epochs 3 --align_epochs 5 --distill_epochs 5 --learning_rate 5e-5  --lr_student 2e-4 --no_t_update --batch_size 256 --top_conf 0.5
+# before: 8.56   after: 53.68 (forget_acc)
+# before: 59.3   after: teacher 59.3    student 60.71 (test_acc)
+python nets/mria.py --dataset cifar-100 --model efficientnet_s --forget_ratio 0.5 --uni_name RL --num_epochs 3 --align_epochs 5 --distill_epochs 5 --learning_rate 5e-5  --lr_student 2e-4 --no_t_update --batch_size 256 --top_conf 0.6
+# GA
+# before: 20.08  after: 27.04 (forget_acc)
+# before: 53.12  after: teacher 53.12   student 55.1  (test_acc)
+python nets/mria.py --dataset cifar-100 --model efficientnet_s --forget_ratio 0.5 --uni_name GA --num_epochs 3 --align_epochs 5 --distill_epochs 5 --learning_rate 5e-5  --lr_student 2e-4 --no_t_update --batch_size 256 --top_conf 0.6
 # IU
-# before: 14.68  after: teacher 14.68  student 26.8
-python nets/mria.py --dataset cifar-100 --model efficientnet_s --forget_ratio 0.5 --uni_name IU --num_epochs 4 --align_epochs 8 --distill_epochs 5 --learning_rate 5e-5  --lr_student 2e-4 --no_t_update --batch_size 256
+# before: 20.08  after: 25.2 (forget_acc)
+# before: 14.01  after: teacher 14.01   student 29.7  (test_acc)
+python nets/mria.py --dataset cifar-100 --model efficientnet_s --forget_ratio 0.5 --uni_name IU --num_epochs 3 --align_epochs 5 --distill_epochs 5 --learning_rate 5e-5  --lr_student 2e-4 --no_t_update --batch_size 256 --top_conf 0.6
 # BU
-# before: 49.83  after: teacher 49.83  student 51.56
-python nets/mria.py --dataset cifar-100 --model efficientnet_s --forget_ratio 0.5 --uni_name BU --num_epochs 4 --align_epochs 8 --distill_epochs 5 --learning_rate 5e-5  --lr_student 2e-4 --no_t_update --batch_size 256
+# before: 25.44  after: 42.32 (forget_acc)
+# before: 52.88  after: teacher 52.88   student 56.56 (test_acc)
+python nets/mria.py --dataset cifar-100 --model efficientnet_s --forget_ratio 0.5 --uni_name BU --num_epochs 3 --align_epochs 5 --distill_epochs 5 --learning_rate 5e-5  --lr_student 2e-4 --no_t_update --batch_size 256 --top_conf 0.6
 # SalUn
-# before: 38.92  after: teacher 38.92  student 47.73
-python nets/mria.py --dataset cifar-100 --model efficientnet_s --forget_ratio 0.5 --uni_name SalUn --num_epochs 4 --align_epochs 8 --distill_epochs 5 --learning_rate 5e-5  --lr_student 2e-4 --no_t_update --batch_size 256
+# before: 22.72  after: 35.76 (forget_acc)
+# before: 40.95  after: teacher 40.95   student 52.17 (test_acc)
+python nets/mria.py --dataset cifar-100 --model efficientnet_s --forget_ratio 0.5 --uni_name SalUn --num_epochs 3 --align_epochs 5 --distill_epochs 5 --learning_rate 5e-5  --lr_student 2e-4 --no_t_update --batch_size 256 --top_conf 0.6
 # fisher
-# before: 15.14  after: teacher 15.14  student 27.74
-python nets/mria.py --dataset cifar-100 --model efficientnet_s --forget_ratio 0.5 --uni_name fisher --num_epochs 4 --align_epochs 8 --distill_epochs 5 --learning_rate 5e-5  --lr_student 2e-4 --no_t_update --batch_size 256
-# GA_l1 todo
-# before: 19.92  after: 23.36  (forget_acc)
-# before: 53.73  after: teacher 53.73   student 54.87  (test_acc)
-python nets/mria.py --dataset cifar-100 --model efficientnet_s --forget_ratio 0.5 --uni_name GA_l1 --num_epochs 3 --align_epochs 5 --distill_epochs 5 --learning_rate 5e-5  --lr_student 2e-4 --no_t_update --batch_size 256 --top_conf 0.5
+# before: 9.44   after: 21.36 (forget_acc)
+# before: 15.85  after: teacher 15.85   student 29.52 (test_acc)
+python nets/mria.py --dataset cifar-100 --model efficientnet_s --forget_ratio 0.5 --uni_name fisher --num_epochs 3 --align_epochs 5 --distill_epochs 5 --learning_rate 5e-5  --lr_student 2e-4 --no_t_update --batch_size 256 --top_conf 0.6
+# GA_l1
+# before: 19.92  after: 25.76  (forget_acc)
+# before: 53.73  after: teacher 53.73   student 54.98  (test_acc)
+python nets/mria.py --dataset cifar-100 --model efficientnet_s --forget_ratio 0.5 --uni_name GA_l1 --num_epochs 3 --align_epochs 5 --distill_epochs 5 --learning_rate 5e-5  --lr_student 2e-4 --no_t_update --batch_size 256 --top_conf 0.6
 # UNSC
-# before: 26.73  after: teacher 26.73  student 38.76
-python nets/mria.py --dataset cifar-100 --model efficientnet_s --forget_ratio 0.5 --uni_name UNSC --num_epochs 4 --align_epochs 8 --distill_epochs 5 --learning_rate 5e-5  --lr_student 2e-4 --no_t_update --batch_size 256
+# before: 20.88  after: 37.2 (forget_acc)
+# before: 27.46  after: teacher 27.46   student 48.01  (test_acc)
+python nets/mria.py --dataset cifar-100 --model efficientnet_s --forget_ratio 0.5 --uni_name UNSC --num_epochs 3 --align_epochs 5 --distill_epochs 5 --learning_rate 5e-5  --lr_student 2e-4 --no_t_update --batch_size 256 --top_conf 0.6

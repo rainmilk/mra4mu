@@ -1,37 +1,37 @@
 # $env:PYTHONPATH += ($pwd).Path  # Powershell
 export PYTHONPATH=$(pwd)
 echo "PYTHONPATH is set to: $PYTHONPATH"
-
-# FT, RL, GA, IU, BU, L1, SalUn
-
-# FT
-# before: 18.4  after: teacher 53.94  student 52.16
-# python nets/mria.py --dataset pet-37 --model resnet18 --forget_ratio 0.5 --uni_name FT --num_epochs 1 --align_epochs 3 --distill_epochs 5 --learning_rate 2e-4  --lr_student 2e-4 --no_t_update --batch_size 64
-# FT_l1
-# before: 33.6   after: teacher 53.56  student 62.72
-# python nets/mria.py --dataset pet-37 --model resnet18 --forget_ratio 0.5 --uni_name FT_l1 --num_epochs 1 --align_epochs 3 --distill_epochs 5 --learning_rate 2e-4  --lr_student 2e-4 --no_t_update --batch_size 64
+# RL, GA, IU, BU, L1, SalUn, GA_l1, UNSC
 
 # RL
-# before: 72.7   after: teacher 72.7   student 85.46
-python nets/mria.py --dataset pet-37 --model resnet18 --forget_ratio 0.5 --uni_name RL --num_epochs 1 --align_epochs 3 --distill_epochs 5 --learning_rate 2e-4  --lr_student 2e-4 --no_t_update --batch_size 64
+# before: 33.2    after: 88.4  (forget_acc)
+# before: 75.39   after: teacher 75.39  student 81.6 (test_acc)
+python nets/mria.py --dataset pet-37 --model resnet18 --forget_ratio 0.5 --uni_name RL --num_epochs 3 --align_epochs 5 --distill_epochs 5 --learning_rate 2e-4  --lr_student 2e-4 --no_t_update --batch_size 64
 # GA
-# before: 70.68  after: teacher 70.68  student 77.77
-python nets/mria.py --dataset pet-37 --model resnet18 --forget_ratio 0.5 --uni_name GA --num_epochs 1 --align_epochs 3 --distill_epochs 5 --learning_rate 2e-4  --lr_student 2e-4 --no_t_update --batch_size 64
+# before: 22.4    after: 52  (forget_acc)
+# before: 73.97   after: teacher 73.97  student 75.74 (test_acc)
+python nets/mria.py --dataset pet-37 --model resnet18 --forget_ratio 0.5 --uni_name GA --num_epochs 3 --align_epochs 5 --distill_epochs 5 --learning_rate 2e-4  --lr_student 2e-4 --no_t_update --batch_size 64
 # IU
-# before: 59.5   after: teacher 59.5   student 80.51
-python nets/mria.py --dataset pet-37 --model resnet18 --forget_ratio 0.5 --uni_name IU --num_epochs 1 --align_epochs 3 --distill_epochs 5 --learning_rate 2e-4  --lr_student 2e-4 --no_t_update --batch_size 64
+# before: 20.0    after: 44.8  (forget_acc)
+# before: 62.2    after: teacher 62.2  student 68.19 (test_acc)
+python nets/mria.py --dataset pet-37 --model resnet18 --forget_ratio 0.5 --uni_name IU --num_epochs 3 --align_epochs 5 --distill_epochs 5 --learning_rate 2e-4  --lr_student 2e-4 --no_t_update --batch_size 64
 # BU
-# before: 60.98  after: teacher 60.98  student 80.07
-python nets/mria.py --dataset pet-37 --model resnet18 --forget_ratio 0.5 --uni_name BU --num_epochs 1 --align_epochs 3 --distill_epochs 5 --learning_rate 2e-4  --lr_student 2e-4 --no_t_update --batch_size 64
+# before: 8.4     after: 85.6  (forget_acc)
+# before: 64.57   after: teacher 64.57  student 78.52 (test_acc)
+python nets/mria.py --dataset pet-37 --model resnet18 --forget_ratio 0.5 --uni_name BU --num_epochs 3 --align_epochs 5 --distill_epochs 5 --learning_rate 2e-4  --lr_student 2e-4 --no_t_update --batch_size 64
 # SalUn
-# before: 66.9   after: teacher 66.9   student 82.21
-python nets/mria.py --dataset pet-37 --model resnet18 --forget_ratio 0.5 --uni_name SalUn --num_epochs 1 --align_epochs 3 --distill_epochs 5 --learning_rate 2e-4  --lr_student 2e-4 --no_t_update --batch_size 64
+# before: 12.8    after: 71.2  (forget_acc)
+# before: 70.59   after: teacher 70.59  student 77.84 (test_acc)
+python nets/mria.py --dataset pet-37 --model resnet18 --forget_ratio 0.5 --uni_name SalUn --num_epochs 3 --align_epochs 5 --distill_epochs 5 --learning_rate 2e-4  --lr_student 2e-4 --no_t_update --batch_size 64
 # fisher
-# before: 25.49  after: teacher 25.49  student 61.9
-python nets/mria.py --dataset pet-37 --model resnet18 --forget_ratio 0.5 --uni_name fisher --num_epochs 1 --align_epochs 3 --distill_epochs 5 --learning_rate 2e-4  --lr_student 2e-4 --no_t_update --batch_size 64
+# before: 22.4    after: 38.8  (forget_acc)
+# before: 25.7    after: teacher 25.7  student 48.57 (test_acc)
+python nets/mria.py --dataset pet-37 --model resnet18 --forget_ratio 0.5 --uni_name fisher --num_epochs 3 --align_epochs 5 --distill_epochs 5 --learning_rate 2e-4  --lr_student 2e-4 --no_t_update --batch_size 64
 # GA_l1
-# before: 70.5   after: teacher 70.5   student 79.05
-python nets/mria.py --dataset pet-37 --model resnet18 --forget_ratio 0.5 --uni_name GA_l1 --num_epochs 1 --align_epochs 3 --distill_epochs 5 --learning_rate 2e-4  --lr_student 2e-4 --no_t_update --batch_size 64
+# before: 19.6    after: 44  (forget_acc)
+# before: 73.97   after: teacher 73.97  student 75.8 (test_acc)
+python nets/mria.py --dataset pet-37 --model resnet18 --forget_ratio 0.5 --uni_name GA_l1 --num_epochs 3 --align_epochs 5 --distill_epochs 5 --learning_rate 2e-4  --lr_student 2e-4 --no_t_update --batch_size 64
 # UNSC
-# before: 73.92  after: teacher 73.92   student 85.46
-python nets/mria.py --dataset pet-37 --model resnet18 --forget_ratio 0.5 --uni_name UNSC --num_epochs 1 --align_epochs 3 --distill_epochs 5 --learning_rate 2e-4  --lr_student 2e-4 --no_t_update --batch_size 64
+# before: 30.4    after: 66  (forget_acc)
+# before: 76.89   after: teacher 76.89  student 79.86 (test_acc)
+python nets/mria.py --dataset pet-37 --model resnet18 --forget_ratio 0.5 --uni_name UNSC --num_epochs 3 --align_epochs 5 --distill_epochs 5 --learning_rate 2e-4  --lr_student 2e-4 --no_t_update --batch_size 64

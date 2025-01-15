@@ -290,16 +290,17 @@ def mria_train(args):
             )
             model_test(forget_loader, model_student, device)
 
-    print("Teacher Model Performance:")
-    model_test(test_loader, model_teacher, device)
-    if update_teacher:
-        state = model_teacher.state_dict()
-        torch.save(state, model_save_path)
-
     print("Student Model Performance:")
     model_test(test_loader, model_student, device)
     state = model_student.state_dict()
     torch.save(state, model_student_path)
+
+    print("Teacher Model Performance:")
+    model_test(forget_loader, model_teacher, device)
+    model_test(test_loader, model_teacher, device)
+    if update_teacher:
+        state = model_teacher.state_dict()
+        torch.save(state, model_save_path)
 
     return model_teacher, model_student
 
