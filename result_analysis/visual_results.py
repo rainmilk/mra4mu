@@ -7,6 +7,7 @@ from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sn
+import os
 
 from arg_parser import parse_args
 from configs import settings
@@ -39,11 +40,12 @@ def execute(args):
 
     _, _, forget_loader = get_dataset_loader(
         args.dataset,
-        "forget",
+        "forget_cls",
         case,
         batch_size=args.batch_size,
         shuffle=False,
     )
+
 
     for uni_name in uni_names:
         print(f"Evaluating {uni_name}:")
@@ -64,8 +66,13 @@ def execute(args):
             forget_loader, model, device, output_embedding=True, output_targets=True
         )
 
-        show_tsne(embedding, labels)
-        show_conf_mt(labels, predicts, forget_cls)
+        save_path = settings.get_visual_result_path(args.dataset, case, uni_name, "recall_tsne")
+        subdir = os.path.dirname(save_path)
+        os.makedirs(subdir, exist_ok=True)
+        show_tsne(embedding, labels, save_path=save_path)
+
+        save_path = settings.get_visual_result_path(args.dataset, case, uni_name, "recall_cmt")
+        show_conf_mt(labels, predicts, forget_cls, save_path=save_path)
         acc, cls_acc = evals_classification(labels, predicts)
 
         model_ckpt_path = settings.get_ckpt_path(
@@ -84,14 +91,18 @@ def execute(args):
         )
         ul_acc, ul_cls_acc = evals_classification(ul_labels, ul_predicts)
 
-        show_tsne(ul_embedding, ul_labels)
-        show_conf_mt(ul_labels, ul_predicts, forget_cls)
+        save_path = settings.get_visual_result_path(args.dataset, case, uni_name, "forget_tsne")
+        show_tsne(ul_embedding, ul_labels, save_path=save_path)
+
+        save_path = settings.get_visual_result_path(args.dataset, case, uni_name, "forget_cmt")
+        show_conf_mt(ul_labels, ul_predicts, forget_cls, save_path=save_path)
 
         #MIA
-        re_mia = evals_MIA(labels, probs, forget_cls)
-        ul_mia = evals_MIA(ul_labels, ul_probs, forget_cls)
+        re_mia = evals_cls_acc(labels, predicts, forget_cls)
+        ul_mia = evals_cls_acc(ul_labels, ul_predicts, forget_cls)
 
-        show_bars(ul_mia, re_mia, forget_cls)
+        save_path = settings.get_visual_result_path(args.dataset, case, uni_name, "cmp_bar")
+        show_bars(ul_mia, re_mia, forget_cls, save_path=save_path)
 
 
 def evals_classification(y_true, y_pred):
@@ -111,59 +122,78 @@ def evals_classification(y_true, y_pred):
     return global_acc.item(), (label_list, eval_results)
 
 
-def evals_MIA(y_true, probs, forget_cls):
+def evals_cls_acc(y_true, y_pred, forget_cls):
     eval_results = []
 
     for label in forget_cls:
         cls_index = y_true == label
-        MIA = np.mean(probs[cls_index][:, label])
-        eval_results.append(MIA)
+        mean_acc = np.mean(y_pred[cls_index] == label)
+        mean_acc[np.isnan(mean_acc)] = 0
+        eval_results.append(mean_acc)
 
     return eval_results
 
 
-def show_bars(bar_data_front, bar_data_back, forget_cls):
+def show_bars(bar_data_front, bar_data_back, forget_cls, size=(5, 5), save_path=None):
     x_labels = [f"C{y}" for y in forget_cls]
     df1 = pd.DataFrame({"Type": "UL", "MIA": bar_data_front, "Forget Classes": x_labels})
     df2 = pd.DataFrame({"Type": "RS", "MIA": bar_data_back, "Forget Classes": x_labels})
     df = pd.concat([df1, df2], axis=0)
+
+    plt.clf()
+
     ax = sn.barplot(df, x="Forget Classes", y="MIA", hue="Type")
     ax.bar_label(ax.containers[0], fontsize=10, fmt="%.2f")
     ax.bar_label(ax.containers[1], fontsize=10, fmt="%.2f")
-    # df = pd.DataFrame({"Accuracy": bar_data_front, "Forget Classes": x_labels})
-    # sn.barplot(df, x="Forget Classes", y="Accuracy", color="red")
-    plt.show()
+
+    ax.figure.set_size_inches(size)
+
+    if save_path is not None:
+        ax.figure.savefig(save_path)
+    else:
+        plt.show()
 
 
-def show_conf_mt(y_true, y_pred, forget_cls):
+def show_conf_mt(y_true, y_pred, forget_cls, size=(5, 5), save_path=None):
     y_true = [y if y in forget_cls else -1 for y in y_true]
     y_pred = [y if y in forget_cls else -1 for y in y_pred]
     cm = confusion_matrix(y_true, y_pred, normalize='true')
     tick_labels = ["Other"] + [f"C{y}" for y in forget_cls]
-    sn.heatmap(cm, xticklabels=tick_labels, yticklabels=tick_labels, annot=True, fmt='.2f', cbar=False)
 
-    plt.show()
+    plt.clf()
+
+    ax = sn.heatmap(cm, xticklabels=tick_labels, yticklabels=tick_labels, annot=True, fmt='.2f', cbar=False)
+
+    ax.figure.set_size_inches(size)
+
+    if save_path is not None:
+        ax.figure.savefig(save_path)
+    else:
+        plt.show()
 
 
-def show_tsne(embeddings, labels):
+def show_tsne(embeddings, labels, size=(5, 5), save_path=None):
     # Apply t-SNE using MulticoreTSNE for speedup
-    tsne_data = TSNE(n_components=2).fit_transform(embeddings)
-    tsne_data = np.vstack((tsne_data.T, labels)).T
-    tsne_df = pd.DataFrame(data=tsne_data,
-                           columns=("x", "y", "label"))
+    tsne_data = TSNE(n_components=2).fit_transform(embeddings).T
+    labels = [f"C{y}" for y in labels]
+    tsne_df = pd.DataFrame({"x":tsne_data[0], "y":tsne_data[1], "label":labels})
 
     # Plotting the result of tsne
-    sn.scatterplot(data=tsne_df, x='x', y='y',
+    plt.clf()
+
+    ax = sn.scatterplot(data=tsne_df, x='x', y='y',
                    hue='label', palette="bright")
-    # get current axes
-    ax = plt.gca()
     # hide x-axis
     ax.get_xaxis().set_visible(False)
     # hide y-axis
     ax.get_yaxis().set_visible(False)
 
-    plt.savefig("tsne.pdf")
-    plt.show()
+    ax.figure.set_size_inches(size)
+
+    if save_path is not None:
+        ax.figure.savefig(save_path)
+    else:
+        plt.show()
 
 
 if __name__ == "__main__":
