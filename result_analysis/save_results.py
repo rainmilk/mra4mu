@@ -11,11 +11,13 @@ def execute():
     global_result_dict = {}
     forget_result_dict = {}
     test_result_dict = {}
+    train_result_dict = {}
 
     for dataset in datasets:
         global_result_dict[dataset] = {}
         forget_result_dict[dataset] = {}
         test_result_dict[dataset] = {}
+        train_result_dict[dataset] = {}
 
         data_dir = os.path.join(result_dir, dataset)
         forget_ratios = os.listdir(data_dir)
@@ -23,37 +25,51 @@ def execute():
             global_result_dict[dataset][forget_ratio] = {}
             forget_result_dict[dataset][forget_ratio] = {}
             test_result_dict[dataset][forget_ratio] = {}
+            train_result_dict[dataset][forget_ratio] = {}
 
             ratio_dir = os.path.join(data_dir, forget_ratio)
             uni_names = os.listdir(ratio_dir)
             for uni_name in uni_names:
-                global_result_dict[dataset][forget_ratio][uni_name] = {}
-                forget_result_dict[dataset][forget_ratio][uni_name] = {}
-                test_result_dict[dataset][forget_ratio][uni_name] = {}
+                if uni_name.endswith('.npy'):
+                    train_file = uni_name
+                    train_file_path = os.path.join(ratio_dir, uni_name)
+                    train_result = np.load(train_file_path, allow_pickle=True)
+                    train_result_type = os.path.splitext(train_file)[0].split('_')[-1]
+                    if '_global.npy' in train_file:
+                        train_result_dict[dataset][forget_ratio][train_result_type] = train_result.item()['global']
+                    if '_forget.npy' in train_file:
+                        train_result_dict[dataset][forget_ratio][train_result_type] = train_result.item()['global']
+                    if '_test.npy' in train_file:
+                        train_result_dict[dataset][forget_ratio][train_result_type] = train_result.item()['global']
 
-                uni_dir = os.path.join(ratio_dir, uni_name)
-                result_files = os.listdir(uni_dir)
-                for result_file in result_files:
-                    result_file_path = os.path.join(uni_dir, result_file)
-                    # load data
-                    result = np.load(result_file_path, allow_pickle=True)
+                else:
+                    global_result_dict[dataset][forget_ratio][uni_name] = {}
+                    forget_result_dict[dataset][forget_ratio][uni_name] = {}
+                    test_result_dict[dataset][forget_ratio][uni_name] = {}
 
-                    result_type = result_file.split('_')[-2]
-                    if result_type not in global_result_dict[dataset][forget_ratio][uni_name].keys():
-                        global_result_dict[dataset][forget_ratio][uni_name][result_type] = {}
+                    uni_dir = os.path.join(ratio_dir, uni_name)
+                    result_files = os.listdir(uni_dir)
+                    for result_file in result_files:
+                        result_file_path = os.path.join(uni_dir, result_file)
+                        # load data
+                        result = np.load(result_file_path, allow_pickle=True)
 
-                    if result_type not in forget_result_dict[dataset][forget_ratio][uni_name].keys():
-                        forget_result_dict[dataset][forget_ratio][uni_name][result_type] = {}
+                        result_type = result_file.split('_')[-2]
+                        if result_type not in global_result_dict[dataset][forget_ratio][uni_name].keys():
+                            global_result_dict[dataset][forget_ratio][uni_name][result_type] = {}
 
-                    if result_type not in test_result_dict[dataset][forget_ratio][uni_name].keys():
-                        test_result_dict[dataset][forget_ratio][uni_name][result_type] = {}
+                        if result_type not in forget_result_dict[dataset][forget_ratio][uni_name].keys():
+                            forget_result_dict[dataset][forget_ratio][uni_name][result_type] = {}
 
-                    if '_global.npy' in result_file_path:
-                        global_result_dict[dataset][forget_ratio][uni_name][result_type] = result.item()['global']
-                    if '_forget.npy' in result_file_path:
-                        forget_result_dict[dataset][forget_ratio][uni_name][result_type] = result.item()['global']
-                    if '_test.npy' in result_file_path:
-                        test_result_dict[dataset][forget_ratio][uni_name][result_type] = result.item()['global']
+                        if result_type not in test_result_dict[dataset][forget_ratio][uni_name].keys():
+                            test_result_dict[dataset][forget_ratio][uni_name][result_type] = {}
+
+                        if '_global.npy' in result_file_path:
+                            global_result_dict[dataset][forget_ratio][uni_name][result_type] = result.item()['global']
+                        if '_forget.npy' in result_file_path:
+                            forget_result_dict[dataset][forget_ratio][uni_name][result_type] = result.item()['global']
+                        if '_test.npy' in result_file_path:
+                            test_result_dict[dataset][forget_ratio][uni_name][result_type] = result.item()['global']
 
         csv_dir = os.path.join(settings.root_dir, 'results_csv')
         os.makedirs(csv_dir, exist_ok=True)
@@ -84,6 +100,11 @@ def execute():
                 csv_path = os.path.join(csv_dir, 'result_%s_%s_test.csv' % (dataset, forget_ratio))
                 df = df.reindex(new_order_header, columns=new_order_index)
                 df.to_csv(csv_path, index=True, header=True)
+
+        # save df train
+        df = pd.DataFrame(train_result_dict)
+        csv_path = os.path.join(csv_dir, 'result_train.csv')
+        df.to_csv(csv_path, index=True, header=True)
 
 
 if __name__ == "__main__":

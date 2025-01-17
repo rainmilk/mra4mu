@@ -1,7 +1,7 @@
 # $env:PYTHONPATH += ($pwd).Path  # Powershell
 export PYTHONPATH=$(pwd)
 echo "PYTHONPATH is set to: $PYTHONPATH"
-# RL, GA, IU, BU, L1, SalUn, GA_l1, UNSC
+# RL, GA, IU, BU, SalUn,fisher, GA_l1, UNSC
 
 # RL
 # before: 15.34   after: 35.06  (forget_acc)

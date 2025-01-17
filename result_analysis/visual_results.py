@@ -28,7 +28,12 @@ def execute(args):
 
     loaded_model = load_custom_model(args.model, num_classes, load_pretrained=False)
     model = ClassifierWrapper(loaded_model, num_classes)
-    ul_model = copy.deepcopy(model)
+    # todo temp code
+    if args.dataset == 'flower-102':
+        loaded_model_ul = load_custom_model('swin_t', num_classes, load_pretrained=False)
+        ul_model = ClassifierWrapper(loaded_model_ul, num_classes)
+    else:
+        ul_model = copy.deepcopy(model)
     model.to(device)
     ul_model.to(device)
 
@@ -64,13 +69,24 @@ def execute(args):
         model.load_state_dict(checkpoint, strict=False)
         model.eval()
 
-        model_ckpt_path = settings.get_ckpt_path(
-            args.dataset,
-            model_case,
-            args.model,
-            model_suffix="ul",
-            unique_name=uni_name,
-        )
+        # todo temp flower-102
+        if args.dataset == 'flower-102':
+            model_ckpt_path = settings.get_ckpt_path(
+                args.dataset,
+                model_case,
+                'swin_t',
+                model_suffix="ul",
+                unique_name=uni_name,
+            )
+        else:
+            model_ckpt_path = settings.get_ckpt_path(
+                args.dataset,
+                model_case,
+                args.model,
+                model_suffix="ul",
+                unique_name=uni_name,
+            )
+
         checkpoint = torch.load(model_ckpt_path)
         ul_model.load_state_dict(checkpoint, strict=False)
         ul_model.eval()
@@ -152,15 +168,16 @@ def evals_cls_acc(y_true, y_pred, forget_cls):
 
 def show_bars(bar_data_front, bar_data_back, forget_cls, size=(5, 5), title=None, save_path=None):
     x_labels = [f"C{y}" for y in forget_cls]
-    df1 = pd.DataFrame({"Type": "ULM", "MIA": bar_data_front, "Forget Classes": x_labels})
-    df2 = pd.DataFrame({"Type": "MRA", "MIA": bar_data_back, "Forget Classes": x_labels})
+    df1 = pd.DataFrame({"Type": "ULM", "ACC": bar_data_front, "Forgetting Classes": x_labels})
+    df2 = pd.DataFrame({"Type": "MRA", "ACC": bar_data_back, "Forgetting Classes": x_labels})
     df = pd.concat([df1, df2], axis=0)
 
     plt.clf()
-
-    ax = sn.barplot(df, x="Forget Classes", y="MIA", hue="Type", palette="bright")
+    ax = sn.barplot(df, x="Forgetting Classes", y="ACC", hue="Type", palette="PuBuGn")
     ax.bar_label(ax.containers[0], fontsize=10, fmt="%.2f")
     ax.bar_label(ax.containers[1], fontsize=10, fmt="%.2f")
+    y_ticks = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    ax.set_yticks(y_ticks)
     ax.legend().set_title('')
     ax.figure.set_size_inches(size)
 
@@ -203,14 +220,17 @@ def show_tsne(embeddings, labels, forget_cls, size=(5, 5), title=None, save_path
     # Plotting the result of tsne
     plt.clf()
 
+    custom_order = sorted(list(set(labels)))
+
     ax = sn.scatterplot(data=tsne_df, x='x', y='y',
-                   hue='Class', palette="muted")
+                   hue='Class', palette="muted", hue_order=custom_order)
     # hide x-axis
     ax.get_xaxis().set_visible(False)
     # hide y-axis
     ax.get_yaxis().set_visible(False)
     ax.legend().set_title('')
     ax.figure.set_size_inches(size)
+    plt.legend(fontsize=7)
 
     if title is not None:
         ax.set_title(title, fontdict={'size': 16, 'weight': 'bold'})
