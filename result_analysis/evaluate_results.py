@@ -83,7 +83,9 @@ def execute(args):
 
         # save results
         root_dir = settings.root_dir
-        result_dir = os.path.join(root_dir, 'results', args.dataset, case, args.uni_name, )
+        result_dir = os.path.join(root_dir, 'results', args.dataset, case)
+        if uni_name is not None:
+            result_dir = os.path.join(result_dir, uni_name)
         os.makedirs(result_dir, exist_ok=True)
         test_file = args.model + '_' + args.model_suffix + '_test.npy'
         forget_file = args.model+'_'+args.model_suffix+'_forget.npy'
