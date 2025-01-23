@@ -34,6 +34,7 @@ def execute(args):
         ul_model = ClassifierWrapper(loaded_model_ul, num_classes)
     else:
         ul_model = copy.deepcopy(model)
+    # distill_model = copy.deepcopy(model)
     model.to(device)
     ul_model.to(device)
 
@@ -91,6 +92,17 @@ def execute(args):
         ul_model.load_state_dict(checkpoint, strict=False)
         ul_model.eval()
 
+        # model_ckpt_path = settings.get_ckpt_path(
+        #     args.dataset,
+        #     model_case,
+        #     args.model,
+        #     model_suffix="distill",
+        #     unique_name=uni_name,
+        # )
+        # checkpoint = torch.load(model_ckpt_path)
+        # distill_model.load_state_dict(checkpoint, strict=False)
+        # distill_model.eval()
+
         predicts, probs, embedding, labels = model_forward(
             pred_loader, model, device, output_embedding=True, output_targets=True
         )
@@ -107,10 +119,10 @@ def execute(args):
         os.makedirs(subdir, exist_ok=True)
         sample_idx = np.random.choice(len(embedding), size=num_classes * samples, replace=True)
         sample_idx = np.unique(sample_idx)
-        show_tsne(embedding[sample_idx], labels[sample_idx], forget_cls, title=f"MRA-{title}", save_path=save_path)
+        show_tsne(embedding[sample_idx], labels[sample_idx], forget_cls, title=f"{title}", save_path=save_path)
 
         save_path = settings.get_visual_result_path(args.dataset, case, uni_name, args.model, "ul", "tsne")
-        show_tsne(ul_embedding[sample_idx], ul_labels[sample_idx], forget_cls, title=f"ULM-{title}", save_path=save_path)
+        show_tsne(ul_embedding[sample_idx], ul_labels[sample_idx], forget_cls, title=f"{title}", save_path=save_path)
 
         predicts, probs, embedding, labels = model_forward(
             forget_loader, model, device, output_embedding=True, output_targets=True
@@ -120,13 +132,18 @@ def execute(args):
             forget_loader, ul_model, device, output_embedding=True, output_targets=True
         )
 
+        # dst_predicts, dst_probs, dst_embedding, dst_labels = model_forward(
+        #     forget_loader, distill_model, device, output_embedding=True, output_targets=True
+        # )
+
         save_path = settings.get_visual_result_path(args.dataset, case, uni_name, args.model, args.model_suffix, "cmt")
-        show_conf_mt(labels, predicts, forget_cls, title=f"MRA-{title}", save_path=save_path)
-        acc, cls_acc = evals_classification(labels, predicts)
-        ul_acc, ul_cls_acc = evals_classification(ul_labels, ul_predicts)
+        show_conf_mt(labels, predicts, forget_cls, title=f"{title}", save_path=save_path)
 
         save_path = settings.get_visual_result_path(args.dataset, case, uni_name, args.model, "ul", "cmt")
-        show_conf_mt(ul_labels, ul_predicts, forget_cls, title=f"ULM-{title}", save_path=save_path)
+        show_conf_mt(ul_labels, ul_predicts, forget_cls, title=f"{title}", save_path=save_path)
+
+        # save_path = settings.get_visual_result_path(args.dataset, case, uni_name, args.model, "distill", "cmt")
+        # show_conf_mt(dst_labels, dst_predicts, forget_cls, title=f"{title}", save_path=save_path)
 
         #MIA
         re_mia = evals_cls_acc(labels, predicts, forget_cls)
@@ -168,21 +185,27 @@ def evals_cls_acc(y_true, y_pred, forget_cls):
 
 def show_bars(bar_data_front, bar_data_back, forget_cls, size=(5, 5), title=None, save_path=None):
     x_labels = [f"C{y}" for y in forget_cls]
-    df1 = pd.DataFrame({"Type": "ULM", "ACC": bar_data_front, "Forgetting Classes": x_labels})
-    df2 = pd.DataFrame({"Type": "MRA", "ACC": bar_data_back, "Forgetting Classes": x_labels})
+    df1 = pd.DataFrame({"Type": "ULM", "Acc": bar_data_front, "Forgetting Classes": x_labels})
+    df2 = pd.DataFrame({"Type": "RCM", "Acc": bar_data_back, "Forgetting Classes": x_labels})
     df = pd.concat([df1, df2], axis=0)
 
     plt.clf()
-    ax = sn.barplot(df, x="Forgetting Classes", y="ACC", hue="Type", palette="PuBuGn")
+    ax = sn.barplot(df, x="Forgetting Classes", y="Acc", hue="Type",
+                    palette="Set1")
     ax.bar_label(ax.containers[0], fontsize=10, fmt="%.2f")
     ax.bar_label(ax.containers[1], fontsize=10, fmt="%.2f")
     y_ticks = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
     ax.set_yticks(y_ticks)
-    ax.legend().set_title('')
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+    ax.xaxis.label.set_size(14)
+    ax.yaxis.label.set_size(14)
+    legend = ax.legend(fontsize=12)
+    legend.set_title('')
     ax.figure.set_size_inches(size)
 
     if title is not None:
-        ax.set_title(title, fontdict={'size': 16, 'weight': 'bold'})
+        ax.set_title(title, fontdict={'size': 24, 'weight': 'bold'})
 
     if save_path is not None:
         ax.figure.savefig(save_path)
@@ -198,11 +221,15 @@ def show_conf_mt(y_true, y_pred, forget_cls, size=(5, 5), title=None, save_path=
 
     plt.clf()
 
-    ax = sn.heatmap(cm, xticklabels=tick_labels, yticklabels=tick_labels, annot=True, fmt='.2f', cbar=False)
+    ax = sn.heatmap(cm, xticklabels=tick_labels, yticklabels=tick_labels,
+                    annot=True, fmt='.2f', cbar=False, annot_kws={"fontsize":14})
+    plt.xticks(fontsize=14)
+    plt.yticks(fontsize=14)
+
     ax.figure.set_size_inches(size)
 
     if title is not None:
-        ax.set_title(title, fontdict={'size': 16, 'weight': 'bold'})
+        ax.set_title(title, fontdict={'size': 24, 'weight': 'bold'})
 
     if save_path is not None:
         ax.figure.savefig(save_path)
@@ -230,10 +257,10 @@ def show_tsne(embeddings, labels, forget_cls, size=(5, 5), title=None, save_path
     ax.get_yaxis().set_visible(False)
     ax.legend().set_title('')
     ax.figure.set_size_inches(size)
-    plt.legend(fontsize=7)
+    plt.legend(fontsize=10)
 
     if title is not None:
-        ax.set_title(title, fontdict={'size': 16, 'weight': 'bold'})
+        ax.set_title(title, fontdict={'size': 24, 'weight': 'bold'})
 
     if save_path is not None:
         ax.figure.savefig(save_path)
