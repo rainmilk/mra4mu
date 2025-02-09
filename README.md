@@ -1,65 +1,31 @@
+# Review for "Recalling The Forgotten Class Memberships: Unlearned Models Can Be Noisy Labelers to Leak Privacy"
 
-## Requirements
-```
-conda env create -f environment.yml
-```
+## 1. COLUR Framework implementation
+/nets/mria.py: The code for building the MRA framework
 
-## Code Structure
-The source code is organized as follows:
+## 2. Implementation of Machine Unlearning Methods
+/unlearn: The directory accommodates all implementations of MU methods used in the paper.
 
-```evaluation```: contains MIA evaluation code.
+## 3. Scripts for Experiments
+### 3.1 Script Directory Structure
+/scripts: The directory accommodates all scripts for the experiments.
+- /scripts/cifar10: scripts for CIFAR-10
+- /scripts/cifar100: scripts for CIFAR-100
+- /scripts/flower102: scripts for Flower-102
+- /scripts/pet37: scripts for Pet-37
 
-```models```: contains the model definitions.
+### 3.2 Script Directory Structure
+Under each script directory for a dataset, e.g. /scripts/cifar10 for CIFAR-10, it contains
+1. gendata.sh: generate train and test data for experiments
+2. train.sh: training model with $D_{tr}$ for TRM 
+3. unlearn.sh: running all the MU methods with $D_{f}$  for ULM
+4. mria_student.sh: running the MRA in the closed-source case for RCM
+5. mria_student.sh: running the MRA in the open-source case for RCM
+6. mria_distill: running the MRA with distillation only
+7. evals.sh: evaluating the experimental results
+8. visuals.sh: draw figures for the experiments
 
-```utils.py```: contains the utility functions. 
 
-```main_imp.py```: contains the code for training and pruning. 
 
-```main_forget.py```: contains the main executable code for unlearning. 
 
-```main_backdoor.py```: contains the main executable code for backdoor cleanse.
-## Commands
 
-### Pruning
-
-#### OMP
-
-```python -u main_imp.py --data ./data --dataset $data --arch $arch --prune_type rewind_lt --rewind_epoch 8 --save_dir ${save_dir} --rate ${rate} --pruning_times 2 --num_workers 8```
-
-#### IMP
-
-```python -u main_imp.py --data ./data --dataset $data --arch $arch --prune_type rewind_lt --rewind_epoch 8 --save_dir ${save_dir} --rate 0.2 --pruning_times ${pruning_times} --num_workers 8```
-
-#### SynFlow
-
-```python -u main_synflow.py --data ./data --dataset cifar10 --prune_type rewind_lt --rewind_epoch 8 --save_dir ${save_dir} --rate ${rate} --pruning_times 1 --num_workers 8```
-
-### Unlearning
-
-#### Retrain
-
-```python -u main_forget.py --save_dir ${save_dir} --mask ${mask_path} --unlearn retrain --num_indexes_to_replace 4500 --unlearn_epochs 160 --unlearn_lr 0.1```
-
-#### FT
-
-```python -u main_forget.py --save_dir ${save_dir} --mask ${mask_path} --unlearn FT --num_indexes_to_replace 4500 --unlearn_lr 0.01 --unlearn_epochs 10```
-
-#### GA
-
-```python -u main_forget.py --save_dir ${save_dir} --mask ${mask_path} --unlearn GA --num_indexes_to_replace 4500 --unlearn_lr 0.0001 --unlearn_epochs 5```
-
-#### FF
-
-```python -u main_forget.py --save_dir ${save_dir} --mask ${mask_path} --unlearn fisher_new --num_indexes_to_replace 4500 --alpha ${alpha}```
-
-#### IU
-
-```python -u main_forget.py --save_dir ${save_dir} --mask ${mask_path} --unlearn wfisher --num_indexes_to_replace 4500 --alpha ${alpha}```
-
-#### $\ell_1$-sparse
-
-```python -u main_forget.py --save_dir ${save_dir} --mask ${mask_path} --unlearn FT_prune --num_indexes_to_replace 4500 --alpha ${alpha} --unlearn_lr 0.01 --unlearn_epochs 10```
-
-### Trojan model cleanse
-
-```python -u main_backdoor.py --save_dir ${save_dir} --mask ${mask_path} --unlearn FT --num_indexes_to_replace 4500```
